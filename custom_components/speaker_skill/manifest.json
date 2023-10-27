@@ -1,0 +1,10 @@
+{
+    "domain": "speaker_skill",
+    "name": "\u667A\u80FD\u97F3\u7BB1\u81EA\u5B9A\u4E49\u6280\u80FD",
+    "version": "2023.10.28",
+    "config_flow": true,
+    "documentation": "https://github.com/shaonianzhentan/speaker_skill",
+    "dependencies": [],
+    "codeowners": ["@shaonianzhentan"],
+    "quality_scale": "internal"
+}
