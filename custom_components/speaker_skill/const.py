@@ -1,0 +1,1 @@
+API_ALIGENIE = "/api/speaker_skill/tmall"
