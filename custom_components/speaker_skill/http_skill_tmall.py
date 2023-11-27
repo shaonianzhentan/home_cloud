@@ -1,13 +1,18 @@
-import logging, json
+import logging
+import json
 from homeassistant.components.http import HomeAssistantView
 
+from .const import API_SKILL_TMALL
+from .utils import matcher_query_state, find_entity
+
+from .manifest import manifest
+
+DOMAIN = manifest.domain
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, ALIGENIE_API
-from .ha import matcher_query_state, find_entity
 
 def build_text_message(message, is_session_end, open_mic):
-    #固定响应格式
+    # 固定响应格式
     RETURN_DATA = {
         "returnCode": "0",
         "returnErrorSolution": "",
@@ -35,9 +40,12 @@ def build_text_message(message, is_session_end, open_mic):
     return RETURN_DATA
 
 # 消息处理
+
+
 async def conversation_process(hass, text, open_mic):
     is_session_end = (open_mic == False)
-    hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': text}))
+    hass.async_create_task(hass.services.async_call(
+        'conversation', 'process', {'text': text}))
     # 如果配置到了查询，则不进入系统意图
     result = matcher_query_state(text)
     if result is not None:
@@ -54,6 +62,8 @@ async def conversation_process(hass, text, open_mic):
     return build_text_message(message, is_session_end, open_mic)
 
 # 格式转换
+
+
 async def parse_input(hass, data, aligenie_name, open_mic):
     # 原始语音内容（这里先写死测试）
     text = data['utterance'].replace(aligenie_name, '')
@@ -62,10 +72,11 @@ async def parse_input(hass, data, aligenie_name, open_mic):
 
     return build_text_message('我没听懂欸', is_session_end=True, open_mic=False)
 
-class HttpAligenieView(HomeAssistantView):
 
-    url = ALIGENIE_API
-    name = ALIGENIE_API[1:].replace('/', ':')
+class HttpSkillTmall(HomeAssistantView):
+
+    url = API_SKILL_TMALL
+    name = API_SKILL_TMALL[1:].replace('/', ':')
     requires_auth = False
 
     async def post(self, request):
@@ -85,7 +96,8 @@ class HttpAligenieView(HomeAssistantView):
         open_mic = options.get('open_mic', True)
         # 验证权限
         if userOpenId != '' and userOpenId != data['requestData']['userOpenId']:
-            response =  build_text_message('抱歉，您没有权限', is_session_end=True, open_mic=False)
+            response = build_text_message(
+                '抱歉，您没有权限', is_session_end=True, open_mic=False)
         else:
             response = await parse_input(hass, data, aligenie_name, open_mic)
 

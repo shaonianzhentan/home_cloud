@@ -1,5 +1,11 @@
 import re
 from homeassistant.helpers import template, entity_registry, area_registry
+import hashlib
+
+
+def md5(data):
+    ''' MD5加密 '''
+    return hashlib.md5(data.encode(encoding='UTF-8')).hexdigest()
 
 
 def trim_char(text):

@@ -2,13 +2,16 @@ import json
 import logging
 from homeassistant.components.http import HomeAssistantView
 
-from .const import DOMAIN, XIAOAI_API
-from .ha import matcher_query_state, find_entity
+from .const import API_SKILL_XIAOAI
+from .utils import matcher_query_state, find_entity
 
-from .xiaoai import (XiaoAIAudioItem, XiaoAIDirective, XiaoAIOpenResponse,
-                    XiaoAIResponse, XiaoAIStream, XiaoAIToSpeak, XiaoAITTSItem,
-                    xiaoai_request, xiaoai_response)
+from .api_xiaoai import (XiaoAIAudioItem, XiaoAIDirective, XiaoAIOpenResponse,
+                         XiaoAIResponse, XiaoAIStream, XiaoAIToSpeak, XiaoAITTSItem,
+                         xiaoai_request, xiaoai_response)
 
+from .manifest import manifest
+
+DOMAIN = manifest.domain
 _LOGGER = logging.getLogger(__name__)
 
 # 文本回复
@@ -23,6 +26,8 @@ def build_text_message(to_speak, is_session_end, open_mic, not_understand=False)
     return response
 
 # 音乐回复
+
+
 def build_music_message(to_speak, mp3_urls):
     all_list = []
     if to_speak is not None:
@@ -45,6 +50,8 @@ def build_music_message(to_speak, mp3_urls):
     return response
 
 # 格式转换
+
+
 async def parse_input(event, hass):
     req = xiaoai_request(event)
     text = req.query
@@ -75,9 +82,12 @@ async def parse_input(event, hass):
     return build_text_message('我没听懂欸', is_session_end=True, open_mic=False)
 
 # 消息处理
+
+
 async def conversation_process(hass, text, open_mic):
     is_session_end = (open_mic == False)
-    hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': text}))
+    hass.async_create_task(hass.services.async_call(
+        'conversation', 'process', {'text': text}))
     # 如果配置到了查询，则不进入系统意图
     result = matcher_query_state(text)
     if result is not None:
@@ -88,22 +98,24 @@ async def conversation_process(hass, text, open_mic):
             if open_mic:
                 message += '，请问还有什么事吗？'
             return build_text_message(message, is_session_end, open_mic)
-    
+
     message = '收到'
     if open_mic:
         message += '，还有什么事吗？'
     return build_text_message(message, is_session_end, open_mic)
 
 # 网关视图
-class HttpXiaoaiView(HomeAssistantView):
 
-    url = XIAOAI_API
-    name = XIAOAI_API[1:].replace('/', ':')
+
+class HttpSkillXiaoai(HomeAssistantView):
+
+    url = API_SKILL_XIAOAI
+    name = API_SKILL_XIAOAI[1:].replace('/', ':')
     requires_auth = False
 
     async def post(self, request):
         data = await request.json()
-        hass = request.app["hass"]        
+        hass = request.app["hass"]
         options = hass.data[DOMAIN]
 
         if options.get('debug', False) == True:
