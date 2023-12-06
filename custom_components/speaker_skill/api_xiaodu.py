@@ -1,32 +1,28 @@
-import time, re
+import time
+import re
 import homeassistant.util.color as color_util
-from homeassistant.helpers import template, entity_registry, area_registry, device_registry
-from .utils import md5
+from .utils import md5, get_area_entity
 
-# 发现设备
 area_entity = {}
-async def discoveryDevice(hass):    
+
+
+async def discoveryDevice(hass):
+    ''' 发现设备 '''
     timestampOfSample = date_now()
-    # 获取所有区域
-    area = area_registry.async_get(hass)
-    area_list = area.async_list_areas()
-    for area_item in area_list:
-        # 获取区域实体
-        entity = entity_registry.async_get(hass)
-        entity_list = entity_registry.async_entries_for_area(entity, area_item.id)
-        for entity_item in entity_list:
-            area_entity.update({
-                entity_item.entity_id: {
-                        "name": "location",
-                        "value": area_item.name,
-                        "scale": "",
-                        "timestampOfSample": timestampOfSample,
-                        "uncertaintyInMilliseconds": 10,
-                        "legalValue": "STRING"
-                    }
-            })
-    
-    # 获取所有设备    
+    _area_entity = get_area_entity(hass)
+    for key, value in _area_entity.items():
+        area_entity.update({
+            key: {
+                "name": "location",
+                "value": value,
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "STRING"
+            }
+        })
+
+    # 获取所有设备
     devices = []
     states = hass.states.async_all()
     for state in states:
@@ -46,22 +42,22 @@ async def discoveryDevice(hass):
         # 设备类型
         device_type = attributes.get('xiaodu_type')
         # 默认开关操作
-        actions = ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode', \
-            "turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
+        actions = ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode',
+                   "turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
         if domain == 'switch' or domain == 'input_boolean':
             # 开关
             device_type = attributes.get('xiaodu_type', 'SWITCH')
         elif domain == 'light':
             # 灯
             device_type = 'LIGHT'
-            actions.extend(["setBrightnessPercentage", "incrementBrightnessPercentage", "decrementBrightnessPercentage", \
-                "incrementColorTemperature", "decrementColorTemperature", "setColorTemperature", "setColor"])
+            actions.extend(["setBrightnessPercentage", "incrementBrightnessPercentage", "decrementBrightnessPercentage",
+                            "incrementColorTemperature", "decrementColorTemperature", "setColorTemperature", "setColor"])
         elif domain == 'climate':
             # 空调
             device_type = 'AIR_CONDITION'
-            actions.extend(["incrementTemperature", "decrementTemperature", "setTemperature", \
-                'getTemperatureReading', 'getTemperature', 'getTargetTemperature', 'getHumidity', 'getTargetHumidity', \
-                "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear"])
+            actions.extend(["incrementTemperature", "decrementTemperature", "setTemperature",
+                            'getTemperatureReading', 'getTemperature', 'getTargetTemperature', 'getHumidity', 'getTargetHumidity',
+                            "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear"])
         elif domain == 'cover':
             actions.extend(['pause', 'continue', 'setDirection'])
             # 窗帘 和 晾衣架
@@ -71,15 +67,15 @@ async def discoveryDevice(hass):
                 device_type = 'CLOTHES_RACK'
                 actions.extend(['incrementHeight', 'decrementHeight'])
         elif domain == 'media_player':
-            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute', \
-                'decrementTVChannel', 'incrementTVChannel', 'setTVChannel'])
+            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute',
+                            'decrementTVChannel', 'incrementTVChannel', 'setTVChannel'])
             if '电视' in friendly_name:
                 device_type = 'TV_SET'
                 actions.extend(['returnTVChannel'])
         elif domain == 'fan':
-            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \
-                'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
-                'getTargetTemperature', 'getHumidity', 'getTargetHumidity'])
+            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear',
+                            'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature',
+                            'getTargetTemperature', 'getHumidity', 'getTargetHumidity'])
             if '净化' in friendly_name:
                 device_type = 'AIR_PURIFIER'
             if '扇' in friendly_name:
@@ -114,7 +110,7 @@ async def discoveryDevice(hass):
             'friendlyName': friendly_name,
             'friendlyDescription': friendly_name,
             'additionalApplianceDetails': {},
-            'applianceTypes': [ device_type ],
+            'applianceTypes': [device_type],
             'isReachable': True,
             'manufacturerName': 'HomeAssistant',
             'modelName': domain,
@@ -135,7 +131,7 @@ async def discoveryDevice(hass):
                     'service': xd['service'],
                     'data': xd.get('data', {})
                 },
-                'applianceTypes': [ "ACTIVITY_TRIGGER" ],
+                'applianceTypes': ["ACTIVITY_TRIGGER"],
                 'isReachable': True,
                 'manufacturerName': 'HomeAssistant',
                 'modelName': "xiaodu",
@@ -150,16 +146,18 @@ async def discoveryDevice(hass):
 # 控制设备
 async def controlDevice(hass, action, payload):
     applianceDic = payload['appliance']
-    additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
+    additionalApplianceDetails = applianceDic.get(
+        'additionalApplianceDetails', {})
     if 'service' in additionalApplianceDetails:
-        call_service(hass, additionalApplianceDetails['service'], additionalApplianceDetails['data'])
+        call_service(
+            hass, additionalApplianceDetails['service'], additionalApplianceDetails['data'])
         return {'attributes': []}
     # 实体ID
     entity_id = applianceDic['applianceId']
     # 服务数据
-    service_data = { 'entity_id': entity_id }
+    service_data = {'entity_id': entity_id}
     state = hass.states.get(entity_id)
-    domain = entity_id.split('.')[0]   
+    domain = entity_id.split('.')[0]
     # 小度事件数据
     xiaodu_data = {
         'type': action,
@@ -183,7 +181,8 @@ async def controlDevice(hass, action, payload):
         xiaodu_data.update({'color': payload['color']})
     # 色温
     if 'colorTemperatureInKelvin' in payload:
-        xiaodu_data.update({'colorTemperatureInKelvin': payload['colorTemperatureInKelvin']})
+        xiaodu_data.update(
+            {'colorTemperatureInKelvin': payload['colorTemperatureInKelvin']})
     # 单位秒
     if 'timestamp' in payload:
         xiaodu_data.update({'timestamp': payload['timestamp']})
@@ -195,7 +194,8 @@ async def controlDevice(hass, action, payload):
         xiaodu_data.update({'brightness': payload['brightness']['value']})
     # 增量百分比
     if 'deltaPercentage' in payload:
-        xiaodu_data.update({'deltaPercentage': payload['deltaPercentage']['value']})
+        xiaodu_data.update(
+            {'deltaPercentage': payload['deltaPercentage']['value']})
     # 模式
     if 'mode' in payload:
         xiaodu_data.update({'mode': payload['mode']['value']})
@@ -204,10 +204,11 @@ async def controlDevice(hass, action, payload):
         xiaodu_data.update({'fanSpeed': payload['fanSpeed']['value']})
     # 温度
     if 'targetTemperature' in payload:
-        xiaodu_data.update({'targetTemperature': payload['targetTemperature']['value']})
-    
+        xiaodu_data.update(
+            {'targetTemperature': payload['targetTemperature']['value']})
+
     # 服务名称
-    ################ 打开关闭设备
+    # 打开关闭设备
     if action == 'TurnOnRequest':
         return call_service(hass, domain + '.turn_on', service_data)
     elif action == 'TurnOffRequest':
@@ -229,10 +230,10 @@ async def controlDevice(hass, action, payload):
     elif action == 'StartUpRequest':
         # 启动
         print('启动')
-    ################ 可控灯光设备
+    # 可控灯光设备
     elif action == 'SetBrightnessPercentageRequest':
         # 亮度
-        service_data.update({ 'brightness_pct': xiaodu_data['brightness'] })
+        service_data.update({'brightness_pct': xiaodu_data['brightness']})
         result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
@@ -247,7 +248,8 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'IncrementBrightnessPercentageRequest':
         # 增加亮度
-        service_data.update({ 'brightness_step_pct': xiaodu_data['deltaPercentage'] })
+        service_data.update(
+            {'brightness_step_pct': xiaodu_data['deltaPercentage']})
         result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
@@ -262,7 +264,8 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'DecrementBrightnessPercentageRequest':
         # 减少亮度
-        service_data.update({ 'brightness_step_pct': -xiaodu_data['deltaPercentage'] })
+        service_data.update(
+            {'brightness_step_pct': -xiaodu_data['deltaPercentage']})
         result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
@@ -277,8 +280,9 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'SetColorRequest':
         color = xiaodu_data['color']
-        service_data.update({ 'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness']) })
-        return call_service(hass, 'light.turn_on', service_data) 
+        service_data.update({'rgb_color': color_util.color_hsb_to_RGB(
+            color['hue'], color['saturation'], color['brightness'])})
+        return call_service(hass, 'light.turn_on', service_data)
     elif action == 'IncrementColorTemperatureRequest':
         print('增加色温')
     elif action == 'DecrementColorTemperatureRequest':
@@ -286,17 +290,19 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetColorTemperatureRequest':
         # 设置色温
         print('设置色温', xiaodu_data['colorTemperatureInKelvin'])
-    ################ 可控温度设备    
+    # 可控温度设备
     elif action == 'IncrementTemperatureRequest':
-        service_data.update({ 'temperature': state.attributes.get('temperature') + deltaValue })
+        service_data.update(
+            {'temperature': state.attributes.get('temperature') + deltaValue})
         return call_service(hass, 'climate.set_temperature', service_data)
     elif action == 'DecrementTemperatureRequest':
-        service_data.update({ 'temperature': state.attributes.get('temperature') - deltaValue })
+        service_data.update(
+            {'temperature': state.attributes.get('temperature') - deltaValue})
         return call_service(hass, 'climate.set_temperature', service_data)
     elif action == 'SetTemperatureRequest':
-        service_data.update({ 'temperature': xiaodu_data['targetTemperature'] })
+        service_data.update({'temperature': xiaodu_data['targetTemperature']})
         return call_service(hass, 'climate.set_temperature', service_data)
-    ################ 设备模式设置
+    # 设备模式设置
     elif action == 'SetModeRequest':
         mode = xiaodu_data['mode']
         # 空调
@@ -310,39 +316,39 @@ async def controlDevice(hass, action, payload):
                 return call_service(hass, 'climate.set_swing_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
             '''
             if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
-                service_data.update({ 'hvac_mode': mode.lower() })
+                service_data.update({'hvac_mode': mode.lower()})
                 return call_service(hass, 'climate.set_hvac_mode', service_data)
         # 电视
         elif domain == 'media_player':
             if mode == 'MUTE':
-                service_data.update({ 'is_volume_muted': True })
+                service_data.update({'is_volume_muted': True})
                 return call_service(hass, 'media_player.volume_mute', service_data)
     elif action == 'UnsetModeRequest':
         # 空调
         if domain == 'climate':
-            service_data.update({ 'hvac_mode': 'auto' })
+            service_data.update({'hvac_mode': 'auto'})
             return call_service(hass, 'climate.set_hvac_mode', service_data)
     elif action == 'TimingSetModeRequest':
         # 空调
         if domain == 'climate':
             mode = xiaodu_data['mode']
             if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
-                service_data.update({ 'hvac_mode': mode.lower() })
+                service_data.update({'hvac_mode': mode.lower()})
                 return call_service(hass, 'climate.set_hvac_mode', service_data)
-    ################ 可控风速设备
+    # 可控风速设备
     elif action == 'IncrementFanSpeedRequest':
         # 空调
         if domain == 'climate':
-            service_data.update({ 'hvac_mode': 'high' })
+            service_data.update({'hvac_mode': 'high'})
             return call_service(hass, 'climate.set_fan_mode', service_data)
     elif action == 'DecrementFanSpeedRequest':
         # 空调
         if domain == 'climate':
-            service_data.update({ 'hvac_mode': 'low' })
+            service_data.update({'hvac_mode': 'low'})
             return call_service(hass, 'climate.set_fan_mode', service_data)
     elif action == 'SetFanSpeedRequest':
         print('设置风速')
-    ################ 可控音量设备
+    # 可控音量设备
     elif action == 'IncrementVolumeRequest':
         # 电视
         if domain == 'media_player':
@@ -354,14 +360,14 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetVolumeRequest':
         # 电视
         if domain == 'media_player':
-            service_data.update({ 'volume_level': deltaValue / 100 })
+            service_data.update({'volume_level': deltaValue / 100})
             return call_service(hass, 'media_player.volume_set', service_data)
     elif action == 'SetVolumeMuteRequest':
         # 电视
         if domain == 'media_player':
-            service_data.update({ 'is_volume_muted': deltaValue == 'on' })
+            service_data.update({'is_volume_muted': deltaValue == 'on'})
             return call_service(hass, 'media_player.volume_mute', service_data)
-    ################ 电视频道设置
+    # 电视频道设置
     elif action == 'IncrementTVChannelRequest':
         print('上一个频道')
         if domain == 'media_player':
@@ -374,7 +380,7 @@ async def controlDevice(hass, action, payload):
         print(f'播放指定频道: {deltaValue}')
     elif action == 'ReturnTVChannelRequest':
         print('返回上一个观看频道')
-    ################ 可控高度设备
+    # 可控高度设备
     elif action == 'IncrementHeightRequest':
         # 晾衣架调高
         if domain == 'cover':
@@ -421,15 +427,19 @@ async def controlDevice(hass, action, payload):
     hass.bus.async_fire("xiaodu_event", xiaodu_data)
     # 调用python_script
     if hass.services.has_service('python_script', 'xiaodu_event'):
-        hass.async_create_task(hass.services.async_call('python_script', 'xiaodu_event', xiaodu_data))
+        hass.async_create_task(hass.services.async_call(
+            'python_script', 'xiaodu_event', xiaodu_data))
     return {
         "attributes": []
     }
 
 # 查询设备
+
+
 def queryDevice(hass, name, payload):
     applianceDic = payload['appliance']
-    additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
+    additionalApplianceDetails = applianceDic.get(
+        'additionalApplianceDetails', {})
     # 实体ID
     entity_id = applianceDic['applianceId']
     state = hass.states.get(entity_id)
@@ -465,7 +475,7 @@ def queryDevice(hass, name, payload):
                 "name": "humidity",
                 "value": value,
                 "scale": "%",
-                "timestampOfSample":date_now(),
+                "timestampOfSample": date_now(),
                 "uncertaintyInMilliseconds": 10,
                 "legalValue": "[0, 100]"
             }]
@@ -474,7 +484,8 @@ def queryDevice(hass, name, payload):
     turnOnState = state.state.upper()
     # 如果是播放器
     if state.domain == 'media_player':
-        turnOnState = ['unavailable', 'off', 'idle'].count(state.state) > 0 and 'OFF' or 'ON'
+        turnOnState = ['unavailable', 'off', 'idle'].count(
+            state.state) > 0 and 'OFF' or 'ON'
 
     return {
         'attributes': [
@@ -482,23 +493,27 @@ def queryDevice(hass, name, payload):
                 "name": "turnOnState",
                 "value": turnOnState,
                 "scale": "",
-                "timestampOfSample":date_now(),
+                "timestampOfSample": date_now(),
                 "uncertaintyInMilliseconds": 10
             }
         ]
     }
 
 # 移除操作
+
+
 def remove_action(actions, name):
     if actions.count(name) > 0:
         actions.remove(name)
-        
+
 # 获取名称
+
+
 def get_friendly_name(attributes):
     return attributes.get('xiaodu_name', attributes.get('friendly_name'))
 
-# 获取默认属性
 def get_attributes(state, default_state=None):
+    ''' 获取默认属性 '''
     domain = state.domain
     attributes = state.attributes
     friendly_name = get_friendly_name(attributes)
@@ -511,7 +526,7 @@ def get_attributes(state, default_state=None):
             "timestampOfSample": timestampOfSample,
             "uncertaintyInMilliseconds": 10,
             "legalValue": "STRING"
-        },            
+        },
         {
             "name": "connectivity",
             "value": "REACHABLE",
@@ -567,6 +582,8 @@ def date_now():
     return int(time.time())
 
 # 异步调用服务
+
+
 def call_service(hass, service, data={}):
     arr = service.split('.')
     domain = arr[0]
@@ -578,14 +595,14 @@ def call_service(hass, service, data={}):
         powerState = 'OFF'
     if action == 'turn_on':
         powerState = 'ON'
-    
+
     # 脚本执行
     if domain == 'script':
         action = entity_id.split('.')[1]
         data = {}
 
     hass.async_create_task(hass.services.async_call(domain, action, data))
-    
+
     return {
         'attributes': get_attributes(state, powerState)
     }

@@ -1,27 +1,37 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "智能音箱语音控制服务",
-                "description": "天猫精灵、小度音箱、小爱同学",
-                "data": {
-                    "url": "服务地址",
-                    "username": "用户名",
-                    "password": "密码"
-                }
-            }
-        },
-        "error": {},
-        "abort": {}
+  "config": {
+    "step": {
+      "user": {
+        "title": "智能音箱语音控制服务",
+        "description": "天猫精灵、小度音箱、小爱同学",
+        "data": {
+          "url": "服务地址",
+          "username": "用户名",
+          "password": "密码",
+          "type": "操作方式"
+        }
+      }
     },
-    "options": {
-        "step": {
-            "user": {
-                "title": "选项",
-                "description": "",
-                "data": {}
-            }
-        },
-        "error": {}
+    "error": {
+      "409": "用户名已存在，请换一个吧",
+      "500": "出现异常，请联系插件作者",
+      "400": "用户名密码错误",
+      "403": "该账号已被封禁"
+    },
+    "abort": {}
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "选项",
+        "description": "",
+        "data": {
+          "url": "远程访问地址"
+        }
+      }
+    },
+    "error": {
+      "500": "出现异常，请联系插件作者"      
     }
+  }
 }

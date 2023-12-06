@@ -14,22 +14,21 @@ class HttpServiceXiaodu(HomeAssistantView):
     async def post(self, request):
         hass = request.app["hass"]
         data = await request.json()
-        options = hass.data[manifest.domain]
-        if options.get('debug', False) == True:
+        api_cloud = hass.data[manifest.domain]
+
+        if api_cloud._debug:
             await hass.services.async_call('persistent_notification', 'create', {
                 'title': '接收信息',
                 'message': json.dumps(data, indent=2)
             })
+
         header = data['header']
         payload = data['payload']
         name = header['name']
         accessToken = payload['accessToken']
-        # 验证权限
-        if accessToken == f'apiKey验证是否有权限':
-            token = accessToken
-        # 走正常流程
         result = {}
-        if token is not None:
+        # 验证权限
+        if accessToken == api_cloud._key:
             namespace = header['namespace']
             if namespace == 'DuerOS.ConnectedHome.Discovery':
                 # 发现设备
@@ -55,7 +54,7 @@ class HttpServiceXiaodu(HomeAssistantView):
             result['openUid'] = payload['openUid']
         response = {'header': header, 'payload': result}
         
-        if options.get('debug', False) == True:
+        if api_cloud._debug:
             await hass.services.async_call('persistent_notification', 'create', {
                 'title': '发送信息',
                 'message': json.dumps(response, indent=2)

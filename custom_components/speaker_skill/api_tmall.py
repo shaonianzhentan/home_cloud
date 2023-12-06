@@ -2,7 +2,8 @@ import time
 import re
 import logging
 import homeassistant.util.color as color_util
-from homeassistant.helpers import template, entity_registry, area_registry, device_registry
+
+from .utils import get_area_entity
 
 _LOGGER = logging.getLogger(__name__)
 '''
@@ -11,23 +12,11 @@ _LOGGER = logging.getLogger(__name__)
 新版文档：https://www.yuque.com/qw5nze/ga14hc/cmhq2c
 '''
 
-# 发现设备
-area_entity = {}
-
 
 async def discoveryDevice(hass):
-    # 获取所有区域
-    area = await area_registry.async_get_registry(hass)
-    area_list = area.async_list_areas()
-    for area_item in area_list:
-        # 获取区域实体
-        entity = await entity_registry.async_get_registry(hass)
-        entity_list = entity_registry.async_entries_for_area(
-            entity, area_item.id)
-        for entity_item in entity_list:
-            area_entity.update({
-                entity_item.entity_id: area_item.name
-            })
+    ''' 发现设备 '''
+
+    area_entity = get_area_entity(hass)
     # 获取所有设备
     devices = []
     states = hass.states.async_all()
