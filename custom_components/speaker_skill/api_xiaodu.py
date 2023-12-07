@@ -1,10 +1,9 @@
 import time
 import re
 import homeassistant.util.color as color_util
-from .utils import md5, get_area_entity
+from .utils import md5, get_area_entity, date_now
 
 area_entity = {}
-
 
 async def discoveryDevice(hass):
     ''' 发现设备 '''
@@ -33,7 +32,7 @@ async def discoveryDevice(hass):
         entity_id = state.entity_id
         domain = attributes.get('xiaodu_domain', state.domain)
         # 过滤空名称
-        friendly_name = get_friendly_name(attributes)
+        friendly_name = attributes.get('friendly_name')
         if friendly_name is None:
             continue
         # 过滤非中文名称
@@ -154,6 +153,9 @@ async def controlDevice(hass, action, payload):
         return {'attributes': []}
     # 实体ID
     entity_id = applianceDic['applianceId']
+    state = hass.states.get(entity_id)
+    if state is None:
+        return None
     # 服务数据
     service_data = {'entity_id': entity_id}
     state = hass.states.get(entity_id)
@@ -443,6 +445,9 @@ def queryDevice(hass, name, payload):
     # 实体ID
     entity_id = applianceDic['applianceId']
     state = hass.states.get(entity_id)
+    if state is None:
+        return None
+
     attributes = state.attributes
     value = state.state
     if name == 'GetTemperatureReadingRequest' or name == 'GetTargetTemperatureRequest':
@@ -507,16 +512,11 @@ def remove_action(actions, name):
         actions.remove(name)
 
 # 获取名称
-
-
-def get_friendly_name(attributes):
-    return attributes.get('xiaodu_name', attributes.get('friendly_name'))
-
 def get_attributes(state, default_state=None):
     ''' 获取默认属性 '''
     domain = state.domain
     attributes = state.attributes
-    friendly_name = get_friendly_name(attributes)
+    friendly_name = attributes.get('friendly_name')
     timestampOfSample = date_now()
     attrs = [
         {
@@ -575,11 +575,6 @@ def get_attributes(state, default_state=None):
     if area_entity_attrs is not None:
         attrs.append(area_entity_attrs)
     return attrs
-
-
-# 10位时间戳
-def date_now():
-    return int(time.time())
 
 # 异步调用服务
 

@@ -89,6 +89,8 @@ async def controlDevice(hass, action, payload):
     powerstate = params.get('powerstate')
     brightness = params.get('brightness')
     motorControl = params.get('motorControl')
+    curtainConrtol = params.get('curtainConrtol')
+    curtainPosition = params.get('curtainPosition')
     volume = params.get('volume')
     muteMode = params.get('muteMode')
     playControl = params.get('playControl')
@@ -133,6 +135,22 @@ async def controlDevice(hass, action, payload):
                             service_name = 'open_cover'
                         elif motorControl == 2:
                             service_name = 'close_cover'
+                # 窗帘控制
+                if curtainConrtol is not None:
+                    # 判断是否晾衣架
+                    if domain == 'cover':
+                        if curtainConrtol == 0:
+                            service_name = 'close_cover'
+                        elif curtainConrtol == 1:
+                            service_name = 'open_cover'
+                        elif curtainConrtol == 2:
+                            service_name = 'stop_cover'
+                # 设置窗帘位置
+                if curtainPosition is not None:
+                    if domain == 'cover':
+                        service_name = 'set_cover_position'
+                        service_data.update({'position': curtainPosition})
+
                 # 媒体播放器
                 if domain == 'media_player':
                     # 设置音量

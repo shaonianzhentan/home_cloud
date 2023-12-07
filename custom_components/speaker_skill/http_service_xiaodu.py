@@ -5,6 +5,7 @@ from .api_xiaodu import discoveryDevice, controlDevice, queryDevice
 from .const import API_SERVICE_XIAODU
 from .manifest import manifest
 
+
 class HttpServiceXiaodu(HomeAssistantView):
 
     url = API_SERVICE_XIAODU
@@ -39,12 +40,17 @@ class HttpServiceXiaodu(HomeAssistantView):
                 result = await controlDevice(hass, name, payload)
                 if result is None:
                     name = 'UnsupportedOperationError'
+                    result = {}
                 else:
                     name = name.replace('Request', 'Confirmation')
             elif namespace == 'DuerOS.ConnectedHome.Query':
                 # 查询设备
                 result = queryDevice(hass, name, payload)
-                name = name.replace('Request', 'Response')
+                if result is None:
+                    name = 'DriverInternalError'
+                    result = {}
+                else:
+                    name = name.replace('Request', 'Response')
         else:
             name = 'InvalidAccessTokenError'
 
@@ -53,7 +59,7 @@ class HttpServiceXiaodu(HomeAssistantView):
         if 'openUid' in payload:
             result['openUid'] = payload['openUid']
         response = {'header': header, 'payload': result}
-        
+
         if api_cloud._debug:
             await hass.services.async_call('persistent_notification', 'create', {
                 'title': '发送信息',

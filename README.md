@@ -1,6 +1,5 @@
-# speaker_skill
-智能音箱自定义技能
-
+# speaker_cloud
+智能音箱云服务
 
 ## 相关文档
 
