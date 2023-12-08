@@ -221,12 +221,12 @@ async def controlDevice(hass, action, payload):
         return call_service(hass, domain + '.turn_off', service_data)
     elif action == 'PauseRequest':
         # 暂停
-        print('暂停')
         if domain == 'media_player':
             return call_service(hass, 'media_player.media_pause', service_data)
+        elif domain == 'cover':
+            return call_service(hass, 'cover.stop_cover', service_data)
     elif action == 'ContinueRequest':
         # 继续
-        print('继续')
         if domain == 'media_player':
             return call_service(hass, 'media_player.media_play', service_data)
     elif action == 'StartUpRequest':
