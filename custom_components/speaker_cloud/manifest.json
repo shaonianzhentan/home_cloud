@@ -1,0 +1,12 @@
+{
+  "domain": "speaker_cloud",
+  "name": "\u667A\u80FD\u97F3\u7BB1\u4E91\u670D\u52A1",
+  "version": "2023.12.8",
+  "config_flow": true,
+  "documentation": "https://github.com/shaonianzhentan/speaker_cloud",
+  "dependencies": [],
+  "codeowners": [
+    "@shaonianzhentan"
+  ],
+  "quality_scale": "internal"
+}

@@ -2,13 +2,13 @@ import aiohttp
 
 
 async def http_post(url, data, headers={}):
-    print('==================')
-    print('URL：', url)
-    print('BODY：', data)
+    #print('==================')
+    #print('URL：', url)
+    #print('BODY：', data)
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.post(url, json=data) as resp:
             result = await resp.json()
-            print('RESULT：', result)
+            #print('RESULT：', result)
             return result
 
 
@@ -22,7 +22,7 @@ class ApiCloud():
         self._url = config.get('url')
         self._username = config.get('username')
         self._password = config.get('password')
-        self._debug = True
+        self._debug = False
 
     def get_url(self, path):
         return f'{self._url}{path}'
