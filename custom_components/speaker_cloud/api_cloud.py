@@ -2,13 +2,13 @@ import aiohttp
 
 
 async def http_post(url, data, headers={}):
-    #print('==================')
-    #print('URL：', url)
-    #print('BODY：', data)
+    # print('==================')
+    # print('URL：', url)
+    # print('BODY：', data)
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.post(url, json=data) as resp:
             result = await resp.json()
-            #print('RESULT：', result)
+            # print('RESULT：', result)
             return result
 
 
@@ -46,3 +46,6 @@ class ApiCloud():
         return await http_post_token(self.get_url('/user/setHassLink'), {
             'hassLink': hassLink
         }, self._token)
+
+    async def sendWecomMsg(self, data):
+        return await http_post_token(self.get_url('/wework/sendMsg'), data, self._token)
