@@ -8,3 +8,4 @@
 - https://dueros.baidu.com/dbp/main/console
 - https://developers.xiaoai.mi.com/
 - https://iap.aligenie.com/home
+- https://developer.work.weixin.qq.com/document/path/90664
