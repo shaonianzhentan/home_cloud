@@ -1,7 +1,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import Platform
+from homeassistant.helpers import discovery
 
 from .http_skill_tmall import HttpSkillTmall
 from .http_skill_xiaoai import HttpSkillXiaoai
@@ -15,7 +15,7 @@ from .manifest import manifest
 from .api_cloud import ApiCloud
 
 PLATFORMS = (    
-    Platform.SENSOR,
+    Platform.SENSOR
 )
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -35,6 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(update_listener))
     
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await discovery.async_load_platform(
+        hass,
+        Platform.NOTIFY,
+        manifest.domain,
+        {'name': entry.title, 'entry_id': entry.entry_id, **entry.data},
+        {},
+    )
     return True
 
 

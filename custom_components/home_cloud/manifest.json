@@ -1,7 +1,7 @@
 {
   "domain": "home_cloud",
   "name": "\u5BB6\u5EAD\u4E91\u670D\u52A1",
-  "version": "2023.12.11",
+  "version": "2023.12.13",
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/speaker_cloud",
   "dependencies": [],
