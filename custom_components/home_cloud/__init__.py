@@ -15,7 +15,7 @@ from .manifest import manifest
 from .api_cloud import ApiCloud
 
 PLATFORMS = (    
-    Platform.SENSOR
+    Platform.SENSOR,
 )
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

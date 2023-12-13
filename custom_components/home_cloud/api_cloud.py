@@ -18,8 +18,10 @@ async def http_post(url, data, headers={}):
             _LOGGER.debug('RESULT：', result)
             return result
 
+
 async def http_post_token(url, data, token):
     return await http_post(url, data, {'Authorization': f'Bearer {token}'})
+
 
 class ApiCloud():
 
@@ -38,24 +40,25 @@ class ApiCloud():
         data = event.data
         old_state = data.get('old_state')
         new_state = data.get('new_state')
+        entity_id = data.get('entity_id')
 
         if entity_id in self.xiaodu_devices:
+
             if old_state is not None and new_state is not None:
-                entity_id = data.get('entity_id')
                 domain = split_entity_id(entity_id)[0]
                 # 状态属性变化
                 attributeName = None
                 if old_state.state == new_state.state:
-                    if new_state.state == 'unavailable':
-                        attributeName = 'connectivity'
-                    else:
-                        attributeName = 'powerState'
-                else:
                     old_attrs = old_state.attributes
                     new_attrs = new_state.attributes
                     if domain == 'light':
                         if old_attrs.get('brightness') != new_attrs.get('brightness'):
                             attributeName = 'brightness'
+                else:
+                    if new_state.state == 'unavailable':
+                        attributeName = 'connectivity'
+                    else:
+                        attributeName = 'powerState'
 
                 # 同步更新
                 if attributeName is not None:
