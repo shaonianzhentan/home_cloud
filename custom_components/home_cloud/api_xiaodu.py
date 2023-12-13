@@ -5,6 +5,7 @@ from .utils import md5, get_area_entity, date_now
 
 area_entity = {}
 
+
 async def discoveryDevice(hass):
     ''' 发现设备 '''
     timestampOfSample = date_now()
@@ -117,27 +118,6 @@ async def discoveryDevice(hass):
             'actions': actions,
             'attributes': get_attributes(state)
         })
-
-        # 自定义设备
-        xiaodu_devices = attributes.get('xiaodu_devices', [])
-        for xd in xiaodu_devices:
-            name = xd['name']
-            devices.append({
-                'applianceId': md5(name),
-                'friendlyName': name,
-                'friendlyDescription': name,
-                'additionalApplianceDetails': {
-                    'service': xd['service'],
-                    'data': xd.get('data', {})
-                },
-                'applianceTypes': ["ACTIVITY_TRIGGER"],
-                'isReachable': True,
-                'manufacturerName': 'HomeAssistant',
-                'modelName': "xiaodu",
-                'version': '1.0',
-                'actions': ["turnOn", "timingTurnOn"],
-                'attributes': {}
-            })
 
     return {'discoveredAppliances': devices}
 
@@ -450,7 +430,12 @@ def queryDevice(hass, name, payload):
 
     attributes = state.attributes
     value = state.state
-    if name == 'GetTemperatureReadingRequest' or name == 'GetTargetTemperatureRequest':
+    if name == 'ReportStateRequest':
+        # 上报属性
+        return {
+            'attributes': get_attributes(state)
+        }
+    elif name == 'GetTemperatureReadingRequest' or name == 'GetTargetTemperatureRequest':
         # 查询设备温度
         xiaodu_entity_id = attributes.get('xiaodu_temperature')
         if xiaodu_entity_id is not None:
@@ -512,6 +497,8 @@ def remove_action(actions, name):
         actions.remove(name)
 
 # 获取名称
+
+
 def get_attributes(state, default_state=None):
     ''' 获取默认属性 '''
     domain = state.domain
@@ -576,10 +563,9 @@ def get_attributes(state, default_state=None):
         attrs.append(area_entity_attrs)
     return attrs
 
-# 异步调用服务
-
 
 def call_service(hass, service, data={}):
+    # 异步调用服务
     arr = service.split('.')
     domain = arr[0]
     action = arr[1]
