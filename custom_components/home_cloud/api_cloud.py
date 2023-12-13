@@ -6,6 +6,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def http_post(url, data, headers={}):
     _LOGGER.debug
     # print('==================')
@@ -17,10 +18,8 @@ async def http_post(url, data, headers={}):
             _LOGGER.debug('RESULT：', result)
             return result
 
-
 async def http_post_token(url, data, token):
     return await http_post(url, data, {'Authorization': f'Bearer {token}'})
-
 
 class ApiCloud():
 
@@ -39,40 +38,48 @@ class ApiCloud():
         data = event.data
         old_state = data.get('old_state')
         new_state = data.get('new_state')
-        if old_state is not None and new_state is not None:
-            entity_id = data.get('entity_id')
-            domain = split_entity_id(entity_id)[0]
-            # 状态属性变化
-            attributeName = None
-            if old_state.state == new_state.state:
-                attributeName = 'powerState'
-            else:
-                old_attrs = old_state.get('attributes', {})
-                new_attrs = new_state.get('attributes', {})
-                if domain == 'light':
-                    if old_attrs.get('brightness') != new_attrs.get('brightness'):
-                        attributeName = 'brightness'
-            # 同步更新
-            if attributeName is not None:
-                if entity_id in self.xiaodu_devices:
-                    skill = self.getSkill('xiaodu')
-                    if skill is not None:
-                        http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
-                            "header": {
-                                "namespace": "DuerOS.ConnectedHome.Control",
-                                "name": "ChangeReportRequest",
-                                "messageId": str(uuid.uuid4()),
-                                "payloadVersion": "1"
-                            },
-                            "payload": {
-                                "botId": "ecf5725f-7af0-0375-6bbd-95162643dbf2",
-                                "openUid": skill['skill_uid'],
-                                "appliance": {
-                                    "applianceId": entity_id,
-                                    "attributeName": attributeName
-                                }
-                            }
-                        })
+
+        if entity_id in self.xiaodu_devices:
+            if old_state is not None and new_state is not None:
+                entity_id = data.get('entity_id')
+                domain = split_entity_id(entity_id)[0]
+                # 状态属性变化
+                attributeName = None
+                if old_state.state == new_state.state:
+                    if new_state.state == 'unavailable':
+                        attributeName = 'connectivity'
+                    else:
+                        attributeName = 'powerState'
+                else:
+                    old_attrs = old_state.attributes
+                    new_attrs = new_state.attributes
+                    if domain == 'light':
+                        if old_attrs.get('brightness') != new_attrs.get('brightness'):
+                            attributeName = 'brightness'
+
+                # 同步更新
+                if attributeName is not None:
+                    await self.asyncXiaoduSync(entity_id, attributeName)
+
+    async def asyncXiaoduSync(self, entity_id, attributeName):
+        skill = self.getSkill('xiaodu')
+        if skill is not None:
+            await http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
+                "header": {
+                    "namespace": "DuerOS.ConnectedHome.Control",
+                    "name": "ChangeReportRequest",
+                    "messageId": str(uuid.uuid4()),
+                    "payloadVersion": "1"
+                },
+                "payload": {
+                    "botId": "ecf5725f-7af0-0375-6bbd-95162643dbf2",
+                    "openUid": skill['skill_uid'],
+                    "appliance": {
+                        "applianceId": entity_id,
+                        "attributeName": attributeName
+                    }
+                }
+            })
 
     def get_url(self, path):
         return f'{self._url}{path}'

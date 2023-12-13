@@ -422,11 +422,23 @@ def queryDevice(hass, name, payload):
     applianceDic = payload['appliance']
     additionalApplianceDetails = applianceDic.get(
         'additionalApplianceDetails', {})
+    timestampOfSample = date_now()
     # 实体ID
     entity_id = applianceDic['applianceId']
     state = hass.states.get(entity_id)
     if state is None:
-        return None
+        return {
+            'attributes': [
+                {
+                    "name": "connectivity",
+                    "value": "UNREACHABLE",
+                    "scale": "",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "(UNREACHABLE, REACHABLE)"
+                }
+            ]
+        }
 
     attributes = state.attributes
     value = state.state
@@ -450,7 +462,7 @@ def queryDevice(hass, name, payload):
                 "value": value,
                 "scale": "CELSIUS"
             },
-            "applianceResponseTimestamp": date_now()
+            "applianceResponseTimestamp": timestampOfSample
         }
     elif name == 'GetHumidityRequest' or name == 'GetTargetHumidityRequest':
         # 查询设备湿度
@@ -465,7 +477,7 @@ def queryDevice(hass, name, payload):
                 "name": "humidity",
                 "value": value,
                 "scale": "%",
-                "timestampOfSample": date_now(),
+                "timestampOfSample": timestampOfSample,
                 "uncertaintyInMilliseconds": 10,
                 "legalValue": "[0, 100]"
             }]
@@ -483,7 +495,7 @@ def queryDevice(hass, name, payload):
                 "name": "turnOnState",
                 "value": turnOnState,
                 "scale": "",
-                "timestampOfSample": date_now(),
+                "timestampOfSample": timestampOfSample,
                 "uncertaintyInMilliseconds": 10
             }
         ]
