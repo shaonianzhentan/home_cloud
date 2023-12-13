@@ -7,6 +7,6 @@ API_SERVICE_XIAODU = "/api/speaker_service/xiaodu"
 API_SKILL_XIAOAI = "/api/speaker_skill/xiaoai"
 API_SERVICE_XIAOAI = "/api/speaker_service/xiaoai"
 
-API_SERVICE_WECOM = "/api/speaker_service/wecom"
+API_SERVICE_WECOM = "/api/homecloud/wecom"
 
 CONVERSATION_ASSISTANT = "conversation_assistant"
