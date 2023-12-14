@@ -1,9 +1,10 @@
 import time
 import re
 import homeassistant.util.color as color_util
-from .utils import md5, get_area_entity, date_now
+from .utils import get_area_entity, date_now
 
 area_entity = {}
+
 
 async def discoveryDevice(hass):
     ''' 发现设备 '''
@@ -500,10 +501,12 @@ def queryDevice(hass, name, payload):
         ]
     }
 
+
 def remove_action(actions, name):
     ''' 移除操作 '''
     if actions.count(name) > 0:
         actions.remove(name)
+
 
 def get_attributes(state, default_state=None):
     ''' 获取默认属性 '''
@@ -522,63 +525,66 @@ def get_attributes(state, default_state=None):
         },
         {
             "name": "connectivity",
-            "value": "REACHABLE",
+            "value": "UNREACHABLE" if state.state == 'unavailable' else "REACHABLE",
             "scale": "",
             "timestampOfSample": timestampOfSample,
             "uncertaintyInMilliseconds": 10,
             "legalValue": "(UNREACHABLE, REACHABLE)"
         }
     ]
-    if default_state is None:
-        default_state = state.state.upper()
-    # [传感器、场景]没有开关
-    if ['sensor'].count(domain) == 0:
-        attrs.extend([
-            {
-                "name": "powerState",
-                "value": default_state,
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "(ON, OFF)"
-            },
-            {
-                "name": "turnOnState",
-                "value": default_state,
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10
-            },
-        ])
+    # 设备失效
+    if state.state != 'unavailable':
+        
+        if default_state is None:
+            default_state = state.state.upper()
+        # [传感器、场景]没有开关
+        if ['sensor'].count(domain) == 0:
+            attrs.extend([
+                {
+                    "name": "powerState",
+                    "value": default_state,
+                    "scale": "",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "(ON, OFF)"
+                },
+                {
+                    "name": "turnOnState",
+                    "value": default_state,
+                    "scale": "",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10
+                },
+            ])
 
-    if domain == 'light':
-        brightness = attributes.get('brightness')
-        if not brightness:
-            brightness = 0
-        attrs.append(
-            {
-                "name": "brightness",
-                "value": int(brightness / 255 * 100),
-                "scale": "%",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "[0, 100]"
-            }
-        )
-    elif domain == 'cover':
-        current_position = attributes.get('current_position')
-        if not current_position:
-            current_position = 100
-        attrs.append(
-            {
-                "name": "percentage",
-                "value": current_position,
-                "scale": "%",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "[0, 100]"
-            }
-        )
+        if domain == 'light':
+            brightness = attributes.get('brightness')
+            if not brightness:
+                brightness = 0
+            attrs.append(
+                {
+                    "name": "brightness",
+                    "value": int(brightness / 255 * 100),
+                    "scale": "%",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0, 100]"
+                }
+            )
+        elif domain == 'cover':
+            current_position = attributes.get('current_position')
+            if not current_position:
+                current_position = 100
+            attrs.append(
+                {
+                    "name": "percentage",
+                    "value": current_position,
+                    "scale": "%",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0, 100]"
+                }
+            )
 
     # 加入区域属性
     area_entity_attrs = area_entity.get(state.entity_id)
