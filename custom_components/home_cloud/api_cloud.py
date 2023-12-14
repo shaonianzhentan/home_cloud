@@ -1,11 +1,13 @@
 import aiohttp
 import uuid
 import logging
-
+import json
 from homeassistant.core import split_entity_id
 from .storage import Storage
 
 _LOGGER = logging.getLogger(__name__)
+
+XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
 
 async def http_post(url, data, headers={}):
     _LOGGER.debug
@@ -14,13 +16,13 @@ async def http_post(url, data, headers={}):
     _LOGGER.debug('BODY：', data)
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.post(url, json=data) as resp:
-            try:
+            if url == XIAODU_REPORT_URL:
+                result = json.loads(await resp.text())
+            else:
                 result = await resp.json()
-                _LOGGER.debug('RESULT：', result)
-                return result
-            except Exception as ex:
-                result = await resp.text()
-                _LOGGER.debug('RESULT：', result)
+
+            _LOGGER.debug('RESULT：', result)
+            return result
 
 async def http_post_token(url, data, token):
     return await http_post(url, data, {'Authorization': f'Bearer {token}'})

@@ -1,10 +1,12 @@
 import json
+import logging
 from homeassistant.components.http import HomeAssistantView
 
 from .api_xiaodu import discoveryDevice, controlDevice, queryDevice
 from .const import API_SERVICE_XIAODU
 from .manifest import manifest
 
+_LOGGER = logging.getLogger(__name__)
 
 class HttpServiceXiaodu(HomeAssistantView):
 
@@ -17,11 +19,7 @@ class HttpServiceXiaodu(HomeAssistantView):
         data = await request.json()
         api_cloud = hass.data[manifest.domain]
 
-        if api_cloud._debug:
-            await hass.services.async_call('persistent_notification', 'create', {
-                'title': '接收信息',
-                'message': json.dumps(data, indent=2)
-            })
+        _LOGGER.debug('接收信息 %s', json.dumps(data, indent=2))
 
         header = data['header']
         payload = data['payload']
@@ -36,7 +34,8 @@ class HttpServiceXiaodu(HomeAssistantView):
                 result = await discoveryDevice(hass)
                 name = 'DiscoverAppliancesResponse'
                 # 本地设备状态上报
-                api_cloud.save_xiaodu_devices(list(map(lambda x: x['applianceId'], result['discoveredAppliances'])))
+                api_cloud.save_xiaodu_devices(
+                    list(map(lambda x: x['applianceId'], result['discoveredAppliances'])))
 
             elif namespace == 'DuerOS.ConnectedHome.Control':
                 # 控制设备
@@ -63,9 +62,6 @@ class HttpServiceXiaodu(HomeAssistantView):
             result['openUid'] = payload['openUid']
         response = {'header': header, 'payload': result}
 
-        if api_cloud._debug:
-            await hass.services.async_call('persistent_notification', 'create', {
-                'title': '发送信息',
-                'message': json.dumps(response, indent=2)
-            })
+        _LOGGER.debug('返回信息 %s', json.dumps(response, indent=2))
+
         return self.json(response)

@@ -5,7 +5,6 @@ from .utils import md5, get_area_entity, date_now
 
 area_entity = {}
 
-
 async def discoveryDevice(hass):
     ''' 发现设备 '''
     timestampOfSample = date_now()
@@ -553,7 +552,9 @@ def get_attributes(state, default_state=None):
         ])
 
     if domain == 'light':
-        brightness = attributes.get('brightness', 255)
+        brightness = attributes.get('brightness')
+        if not brightness:
+            brightness = 0
         attrs.append(
             {
                 "name": "brightness",
@@ -564,6 +565,21 @@ def get_attributes(state, default_state=None):
                 "legalValue": "[0, 100]"
             }
         )
+    elif domain == 'cover':
+        current_position = attributes.get('current_position')
+        if not current_position:
+            current_position = 100
+        attrs.append(
+            {
+                "name": "percentage",
+                "value": current_position,
+                "scale": "%",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "[0, 100]"
+            }
+        )
+
     # 加入区域属性
     area_entity_attrs = area_entity.get(state.entity_id)
     if area_entity_attrs is not None:
