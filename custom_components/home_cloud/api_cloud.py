@@ -1,11 +1,11 @@
 import aiohttp
 import uuid
-from homeassistant.core import split_entity_id
-
 import logging
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.core import split_entity_id
+from .storage import Storage
 
+_LOGGER = logging.getLogger(__name__)
 
 async def http_post(url, data, headers={}):
     _LOGGER.debug
@@ -14,10 +14,13 @@ async def http_post(url, data, headers={}):
     _LOGGER.debug('BODY：', data)
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.post(url, json=data) as resp:
-            result = await resp.json()
-            _LOGGER.debug('RESULT：', result)
-            return result
-
+            try:
+                result = await resp.json()
+                _LOGGER.debug('RESULT：', result)
+                return result
+            except Exception as ex:
+                result = await resp.text()
+                _LOGGER.debug('RESULT：', result)
 
 async def http_post_token(url, data, token):
     return await http_post(url, data, {'Authorization': f'Bearer {token}'})
@@ -30,8 +33,9 @@ class ApiCloud():
         self._username = config.get('username')
         self._password = config.get('password')
         self._debug = False
-        # 小度设备
-        self.xiaodu_devices = []
+        # 加载小度设备
+        storage = Storage('homecloud.xiaodu_devices')
+        self.xiaodu_devices = storage.load([])
         # 设备状态监听
         self.hass = hass
         hass.bus.async_listen("state_changed", self.state_changed)
@@ -62,9 +66,9 @@ class ApiCloud():
 
                 # 同步更新
                 if attributeName is not None:
-                    await self.asyncXiaoduSync(entity_id, attributeName)
+                    await self.async_xiaodu_sync(entity_id, attributeName)
 
-    async def asyncXiaoduSync(self, entity_id, attributeName):
+    async def async_xiaodu_sync(self, entity_id, attributeName):
         skill = self.getSkill('xiaodu')
         if skill is not None:
             await http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
@@ -83,6 +87,11 @@ class ApiCloud():
                     }
                 }
             })
+
+    def save_xiaodu_devices(self, xiaodu_devices):
+        self.xiaodu_devices = xiaodu_devices
+        storage = Storage('homecloud.xiaodu_devices')
+        storage.save(xiaodu_devices)
 
     def get_url(self, path):
         return f'{self._url}{path}'

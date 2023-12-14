@@ -36,7 +36,8 @@ class HttpServiceXiaodu(HomeAssistantView):
                 result = await discoveryDevice(hass)
                 name = 'DiscoverAppliancesResponse'
                 # 本地设备状态上报
-                api_cloud.xiaodu_devices = list(map(lambda x: x['applianceId'], result['discoveredAppliances']))
+                api_cloud.save_xiaodu_devices(list(map(lambda x: x['applianceId'], result['discoveredAppliances'])))
+
             elif namespace == 'DuerOS.ConnectedHome.Control':
                 # 控制设备
                 result = await controlDevice(hass, name, payload)

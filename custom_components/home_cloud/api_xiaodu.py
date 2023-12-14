@@ -501,15 +501,10 @@ def queryDevice(hass, name, payload):
         ]
     }
 
-# 移除操作
-
-
 def remove_action(actions, name):
+    ''' 移除操作 '''
     if actions.count(name) > 0:
         actions.remove(name)
-
-# 获取名称
-
 
 def get_attributes(state, default_state=None):
     ''' 获取默认属性 '''
