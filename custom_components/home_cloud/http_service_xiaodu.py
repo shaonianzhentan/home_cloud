@@ -45,6 +45,10 @@ class HttpServiceXiaodu(HomeAssistantView):
                     result = {}
                 else:
                     name = name.replace('Request', 'Confirmation')
+
+                # 暂停上报5秒钟
+                entity_id = payload['appliance']['applianceId']
+                api_cloud.set_report_time(entity_id, 5)                
             elif namespace == 'DuerOS.ConnectedHome.Query':
                 # 查询设备
                 result = queryDevice(hass, name, payload)

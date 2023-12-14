@@ -2,6 +2,7 @@ import aiohttp
 import uuid
 import logging
 import json
+import time
 from homeassistant.core import split_entity_id
 from .storage import Storage
 
@@ -12,8 +13,8 @@ XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
 async def http_post(url, data, headers={}):
     _LOGGER.debug
     # print('==================')
-    _LOGGER.debug('URL：', url)
-    _LOGGER.debug('BODY：', data)
+    _LOGGER.debug('URL：%s', url)
+    _LOGGER.debug('BODY：%s', json.dumps(data, indent=2))
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.post(url, json=data) as resp:
             if url == XIAODU_REPORT_URL:
@@ -21,7 +22,7 @@ async def http_post(url, data, headers={}):
             else:
                 result = await resp.json()
 
-            _LOGGER.debug('RESULT：', result)
+            _LOGGER.debug('RESULT：%s', json.dumps(result, indent=2))
             return result
 
 async def http_post_token(url, data, token):
@@ -38,6 +39,7 @@ class ApiCloud():
         # 加载小度设备
         storage = Storage('homecloud.xiaodu_devices')
         self.xiaodu_devices = storage.load([])
+        self.xiaodu_report_time = {} 
         # 设备状态监听
         self.hass = hass
         hass.bus.async_listen("state_changed", self.state_changed)
@@ -49,6 +51,11 @@ class ApiCloud():
         entity_id = data.get('entity_id')
 
         if entity_id in self.xiaodu_devices:
+            # 阻止上报
+            report_time = self.xiaodu_report_time.get(entity_id)
+            if report_time is not None:
+                if int(time.time()) < report_time:
+                    return
 
             if old_state is not None and new_state is not None:
                 domain = split_entity_id(entity_id)[0]
@@ -89,11 +96,15 @@ class ApiCloud():
                     }
                 }
             })
+            self.set_report_time(entity_id, 60)
 
     def save_xiaodu_devices(self, xiaodu_devices):
         self.xiaodu_devices = xiaodu_devices
         storage = Storage('homecloud.xiaodu_devices')
         storage.save(xiaodu_devices)
+
+    def set_report_time(self, entity_id, second = 0):
+        self.xiaodu_report_time[entity_id] = int(time.time()) + second
 
     def get_url(self, path):
         return f'{self._url}{path}'
