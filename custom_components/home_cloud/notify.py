@@ -1,6 +1,6 @@
 """Notify.Events platform for notify component."""
 from __future__ import annotations
-
+import time
 import logging
 
 from homeassistant.components.notify import (
@@ -11,6 +11,7 @@ from homeassistant.components.notify import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .utils import call_service
 from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +32,17 @@ class HomeCloudNotificationService(BaseNotificationService):
     async def async_send_message(self, message, **kwargs):
         """Send a message."""
         data = kwargs.get(ATTR_DATA) or {}
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE) or time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         image = data.get('image')
-        image = None
         if not image:
+            # 文本
+            msg = {
+                'msgtype': 'text',
+                'text': {
+                    'content': message
+                }
+            }
+        else:
             # 图片
             msg = {
                 'msgtype': 'news',
@@ -43,20 +51,17 @@ class HomeCloudNotificationService(BaseNotificationService):
                         {
                             "title": title,
                             "description": message,
-                            "url": data.get('url'),
+                            "url": data.get('url', ),
                             "picurl": image
                         }
                     ]
                 },
             }
-        else:
-            # 文本
-            msg = {
-                'msgtype': 'text',
-                'text': {
-                    'content': message
-                }
-            }
 
         api_cloud = self.hass.data[manifest.domain]
-        await api_cloud.sendWecomMsg(msg)
+        res = await api_cloud.sendWecomMsg(msg)
+        if res['code'] != 0:
+            call_service('persistent_notification.create', {
+                'title': '微信推送服务异常',
+                'message': res['msg']
+            })

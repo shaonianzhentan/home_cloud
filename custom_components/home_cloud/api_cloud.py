@@ -140,4 +140,4 @@ class ApiCloud():
         }, self._token)
 
     async def sendWecomMsg(self, data):
-        return await http_post_token(self.get_url('/wework/sendMsg'), data, self._token)
+        return await http_post_token(self.get_url('/wework/send'), data, self._token)
