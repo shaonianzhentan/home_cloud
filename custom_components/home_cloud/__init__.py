@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Platform.NOTIFY,
         manifest.domain,
         {
-            'name': f'{manifest.domain}_wecom',
+            'name': f'{manifest.domain}_wechat',
             'entry_id': entry.entry_id,
             **entry.data
         },
