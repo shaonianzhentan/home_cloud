@@ -36,6 +36,7 @@ class ApiCloud():
         self._username = config.get('username')
         self._password = config.get('password')
         self._debug = False
+        self._skill_list = None
         # 加载小度设备
         storage = Storage('homecloud.xiaodu_devices')
         self.xiaodu_devices = storage.load([])
@@ -137,6 +138,11 @@ class ApiCloud():
     async def setHassLink(self, hassLink):
         return await http_post_token(self.get_url('/user/setHassLink'), {
             'hassLink': hassLink
+        }, self._token)
+
+    async def setPassword(self, password):
+        return await http_post_token(self.get_url('/user/setPassword'), {
+            'password': password
         }, self._token)
 
     async def sendWecomMsg(self, data):

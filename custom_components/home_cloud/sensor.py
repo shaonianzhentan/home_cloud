@@ -5,7 +5,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from datetime import datetime
 from .manifest import manifest
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -13,6 +15,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     async_add_entities([HomeCloudSensor(config_entry)])
+
 
 class HomeCloudSensor(SensorEntity):
 
@@ -27,6 +30,20 @@ class HomeCloudSensor(SensorEntity):
             name=manifest.name,
             sw_version=manifest.version,
         )
+        self._attributes = {}
+
+    @property
+    def state_attributes(self):
+        return self._attributes
 
     async def async_update(self):
-        self._attr_native_value = '状态正常'
+        api_cloud = self.hass.data[manifest.domain]
+
+        self._attr_native_value = '授权成功' if api_cloud._skill_list is not None else '授权失败'
+        self._attributes.update({
+            'username': api_cloud._username,
+            'skill': list(map(lambda x: {
+                'name': x['skill_name'],
+                'expired': datetime.strptime(x['expired'], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d")
+            }, api_cloud._skill_list))
+        })

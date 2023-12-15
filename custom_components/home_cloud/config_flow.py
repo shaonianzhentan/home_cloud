@@ -13,18 +13,18 @@ from .manifest import manifest
 
 from .api_cloud import http_post
 
-OP_LOGIN_NAME = '登录'
-OP_REGISTER_NAME = '注册'
-
 
 class SimpleConfigFlow(ConfigFlow, domain=manifest.domain):
 
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None, errors={}) -> FlowResult:
-        
+
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        OP_LOGIN_NAME = '登录'
+        OP_REGISTER_NAME = '注册'
 
         if user_input is not None:
             url = user_input[CONF_URL]
@@ -75,18 +75,51 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_user(self, user_input=None, errors={}):
 
+        OP_HASSLINK = '设置转发地址'
+        OP_PASSWORD = '修改密码'
+
         api_cloud = self.hass.data[manifest.domain]
+        if user_input is not None:
+            _type = user_input.get(CONF_TYPE)
+
+            if _type == OP_HASSLINK:
+                return await self.async_step_hasslink()
+            elif _type == OP_PASSWORD:
+                return await self.async_step_password()
+
+        return self.async_show_form(step_id="user", data_schema=vol.Schema({
+            vol.Required(CONF_TYPE): vol.In([OP_HASSLINK, OP_PASSWORD]),
+        }), errors=errors)
+
+    async def async_step_hasslink(self, user_input=None, errors={}):
+        
+        api_cloud = self.hass.data[manifest.domain]
+        
         if user_input is not None:
             url = user_input.get(CONF_URL)
             res = await api_cloud.setHassLink(url)
             if res.get('code') == 0:
-                return self.async_create_entry(title='', data=user_input)
+                return self.async_create_entry(title='', data={})
             else:
                 errors['base'] = '500'
 
         res = await api_cloud.getUserInfo()
         data = res.get('data')
-        DATA_SCHEMA = vol.Schema({
+        return self.async_show_form(step_id="hasslink", data_schema=vol.Schema({
             vol.Required(CONF_URL, default=data.get('hassLink')): str,
-        })
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)
+        }), errors=errors)
+
+    async def async_step_password(self, user_input=None, errors={}):
+        
+        if user_input is not None:
+            password = user_input.get(CONF_PASSWORD)
+            api_cloud = self.hass.data[manifest.domain]
+            res = await api_cloud.setPassword(password)
+            if res.get('code') == 0:
+                return self.async_create_entry(title='', data={})
+            else:
+                errors['base'] = '500'
+
+        return self.async_show_form(step_id="password", data_schema=vol.Schema({
+            vol.Required(CONF_PASSWORD): str,
+        }), errors=errors)

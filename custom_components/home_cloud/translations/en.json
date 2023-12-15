@@ -25,10 +25,24 @@
   "options": {
     "step": {
       "user": {
-        "title": "信息配置",
-        "description": "设置转发的远程地址",
+        "title": "用户设置",
+        "description": "修改HomeCloud服务用户信息",
         "data": {
-          "url": "远程访问地址"
+          "type": "操作选项"
+        }
+      },
+      "hasslink": {
+        "title": "设置HassLink",
+        "description": "设置后可以将平台消息转发到HomeAssistant中",
+        "data": {
+          "url": "HomeAssistant远程访问地址"
+        }
+      },
+      "password": {
+        "title": "修改密码",
+        "description": "修改HomeCloud服务密码",
+        "data": {
+          "password": "用户密码"
         }
       }
     },
