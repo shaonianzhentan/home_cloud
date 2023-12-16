@@ -68,6 +68,9 @@ class ApiCloud():
                     if domain == 'light':
                         if old_attrs.get('brightness') != new_attrs.get('brightness'):
                             attributeName = 'brightness'
+                    elif domain == 'climate':
+                        if old_attrs.get('target_temperature') != new_attrs.get('target_temperature'):
+                            attributeName = 'temperature'
                 else:
                     if new_state.state == 'unavailable':
                         attributeName = 'connectivity'

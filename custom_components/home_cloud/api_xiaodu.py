@@ -488,6 +488,11 @@ def queryDevice(hass, name, payload):
     if state.domain == 'media_player':
         turnOnState = ['unavailable', 'off', 'idle'].count(
             state.state) > 0 and 'OFF' or 'ON'
+    elif state.domain == 'cover':
+        if state.state == 'open':
+            turnOnState = 'ON'
+        elif state.state == 'closed':
+            turnOnState = 'OFF'
 
     return {
         'attributes': [
@@ -534,7 +539,7 @@ def get_attributes(state, default_state=None):
     ]
     # 设备失效
     if state.state != 'unavailable':
-        
+
         if default_state is None:
             default_state = state.state.upper()
         # [传感器、场景]没有开关
@@ -585,6 +590,58 @@ def get_attributes(state, default_state=None):
                     "legalValue": "[0, 100]"
                 }
             )
+        elif domain == 'climate':
+            current_temperature = attributes.get('current_temperature')
+            target_temperature = attributes.get('target_temperature')
+
+            min_temp = attributes.get('min_temp')
+            max_temp = attributes.get('max_temp')
+            
+            fan_speed = attributes.get('fan_speed')
+
+            mode = attributes.get('mode')
+            hvac_modes = attributes.get('hvac_modes')
+            hvac_mode = hvac_mode[mode]
+
+            fan_mode = attributes.get('fan_mode')
+            fan_modes = attributes.get('fan_modes')
+            
+            attrs.extend([
+                {
+                    "name": "temperature",
+                    "value": current_temperature,
+                    "scale": "CELSIUS",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0.0, 100.0]"
+                },
+                {
+                    "name": "targetTemperature",
+                    "value": target_temperature,
+                    "scale": "CELSIUS",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": f"[{min_temp}, {max_temp}]"
+                },
+                '''
+                {
+                    "name": "mode",
+                    "value": hvac_mode,
+                    "scale": "%",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0, 100]"
+                },
+                {
+                    "name": "fanSpeed",
+                    "value": fan_speed,
+                    "scale": "",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0, 10]"
+                }
+                '''
+            ])
 
     # 加入区域属性
     area_entity_attrs = area_entity.get(state.entity_id)
@@ -616,3 +673,5 @@ def call_service(hass, service, data={}):
     return {
         'attributes': get_attributes(state, powerState)
     }
+
+
