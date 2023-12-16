@@ -8,16 +8,46 @@ class XiaoduDevice():
         self.hass = async_get_hass()
         self.entity_id = entity_id
         self.domain = split_entity_id(entity_id)[0]
+        self.entity = self.hass.states.get(entity_id)
 
     @property()
-    def entity(self):
-        return self.hass.states.get(self.entity_id)
+    def friendly_name(self):
+        return self.entity.attributes.get('friendly_name')
 
     @property()
     def timestampOfSample(self):
         return int(time.time())
 
-    def get_attribute(self):
+    def get_actions_mode(self):
+        ''' 控制模式 '''
+        return ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode']
+
+    def get_actions_light(self):
+        ''' 灯光 '''
+        return ["setBrightnessPercentage", "incrementBrightnessPercentage", "decrementBrightnessPercentage",
+                "incrementColorTemperature", "decrementColorTemperature", "setColorTemperature", "setColor"]
+
+    def get_actions_switch(self):
+        ''' 开关操作 '''
+        return ["turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "getLocation", "setComplexActions"]
+
+    def device_info(self, device_type, actions, attributes):
+        ''' 设备信息 '''
+        return {
+            'applianceId': self.entity_id,
+            'friendlyName': self.friendly_name,
+            'friendlyDescription': self.friendly_name,
+            'additionalApplianceDetails': {},
+            'applianceTypes': [device_type],
+            'isReachable': True,
+            'manufacturerName': 'HomeAssistant',
+            'modelName': self.domain,
+            'version': '1.0',
+            'actions': actions,
+            'attributes': attributes
+        }
+
+    def get_attribute_base(self):
         state = self.entity
         if state is None:
             return [
