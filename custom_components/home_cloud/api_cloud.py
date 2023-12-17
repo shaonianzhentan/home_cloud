@@ -75,7 +75,7 @@ class ApiCloud():
                     if new_state.state == 'unavailable':
                         attributeName = 'connectivity'
                     else:
-                        attributeName = 'powerState'
+                        attributeName = 'turnOnState'
 
                 # 同步更新
                 if attributeName is not None:

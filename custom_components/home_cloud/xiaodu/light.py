@@ -1,7 +1,7 @@
-from . import XiaoduDevice, XiaoduActions
+from . import XiaoduDeviceBase, XiaoduActions
 
 
-class XiaoduLight(XiaoduDevice):
+class XiaoduLight(XiaoduDeviceBase):
 
     def __init__(self, entity_id) -> None:
         super().__init__(entity_id)

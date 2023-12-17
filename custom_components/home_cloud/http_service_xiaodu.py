@@ -4,7 +4,7 @@ from homeassistant.components.http import HomeAssistantView
 
 from .const import API_SERVICE_XIAODU
 from .manifest import manifest
-from .xiaodu import XiaoduCloud
+from .xiaodu.api import XiaoduCloud
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,7 @@ class HttpServiceXiaodu(HomeAssistantView):
             if namespace == 'DuerOS.ConnectedHome.Discovery':
                 response = xiaodu.discovery()
                 # 本地设备状态上报
-                api_cloud.save_xiaodu_devices(
-                    list(map(lambda x: x['applianceId'], response['payload']['discoveredAppliances'])))
+                api_cloud.save_xiaodu_devices(list(map(lambda x: x['applianceId'], response['payload']['discoveredAppliances'])))
 
             elif namespace == 'DuerOS.ConnectedHome.Control':
                 response = xiaodu.control()
