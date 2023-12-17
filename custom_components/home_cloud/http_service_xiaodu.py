@@ -2,9 +2,9 @@ import json
 import logging
 from homeassistant.components.http import HomeAssistantView
 
-from .api_xiaodu import discoveryDevice, controlDevice, queryDevice
 from .const import API_SERVICE_XIAODU
 from .manifest import manifest
+from .xiaodu import XiaoduCloud
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,56 +16,35 @@ class HttpServiceXiaodu(HomeAssistantView):
 
     async def post(self, request):
         hass = request.app["hass"]
-        data = await request.json()
+        body = await request.json()
         api_cloud = hass.data[manifest.domain]
 
-        _LOGGER.debug('接收信息 %s', json.dumps(data, indent=2))
+        _LOGGER.debug('接收信息 %s', json.dumps(body, indent=2))
 
-        header = data['header']
-        payload = data['payload']
-        name = header['name']
-        accessToken = payload['accessToken']
-        result = {}
-        # 验证权限
-        if accessToken == api_cloud._key:
-            namespace = header['namespace']
+        payload = body['payload']
+
+        xiaodu = XiaoduCloud(body)
+        response = xiaodu.validate(api_cloud._key)
+        if not response:
+            namespace = body['header']['namespace']
             if namespace == 'DuerOS.ConnectedHome.Discovery':
-                # 发现设备
-                result = await discoveryDevice(hass)
-                name = 'DiscoverAppliancesResponse'
+                response = xiaodu.discovery()
                 # 本地设备状态上报
                 api_cloud.save_xiaodu_devices(
-                    list(map(lambda x: x['applianceId'], result['discoveredAppliances'])))
+                    list(map(lambda x: x['applianceId'], response['payload']['discoveredAppliances'])))
 
             elif namespace == 'DuerOS.ConnectedHome.Control':
-                # 控制设备
-                result = await controlDevice(hass, name, payload)
-                if result is None:
-                    name = 'UnsupportedOperationError'
-                    result = {}
-                else:
-                    name = name.replace('Request', 'Confirmation')
-
+                response = xiaodu.control()
                 # 暂停上报5秒钟
                 entity_id = payload['appliance']['applianceId']
-                api_cloud.set_report_time(entity_id, 5)                
-            elif namespace == 'DuerOS.ConnectedHome.Query':
-                # 查询设备
-                result = queryDevice(hass, name, payload)
-                if result is None:
-                    name = 'DriverInternalError'
-                    result = {}
-                else:
-                    name = name.replace('Request', 'Response')
-        else:
-            name = 'InvalidAccessTokenError'
+                api_cloud.set_report_time(entity_id, 5)        
 
-        header['name'] = name
+            elif namespace == 'DuerOS.ConnectedHome.Query':
+                response = xiaodu.query()
+
         # 如果包含Uid则返回用户ID
         if 'openUid' in payload:
-            result['openUid'] = payload['openUid']
-        response = {'header': header, 'payload': result}
+            response['payload']['openUid'] = payload['openUid']
 
         _LOGGER.debug('返回信息 %s', json.dumps(response, indent=2))
-
         return self.json(response)

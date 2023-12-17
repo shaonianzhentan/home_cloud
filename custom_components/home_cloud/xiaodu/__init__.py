@@ -1,5 +1,122 @@
+from homeassistant.helpers import template
 from homeassistant.core import async_get_hass, split_entity_id
 import time
+import re
+from .light import *
+from .switch import *
+from .socket import *
+
+
+class XiaoduActions():
+
+    turnOn = 'turnOn'  # 打开
+
+    turnOff = 'turnOff'  # 关闭
+
+    timingTurnOn = 'timingTurnOn'  # 定时打开
+
+    timingTurnOff = 'timingTurnOff'  # 定时关闭
+
+    pause = 'pause'  # 暂停
+
+    continue_ = 'continue'  # 继续
+
+    setColor = 'setColor'  # 设置颜色
+
+    setColorTemperature = 'setColorTemperature'  # 设置灯光色温
+
+    incrementColorTemperature = 'incrementColorTemperature'  # 增高灯光色温
+
+    decrementColorTemperature = 'decrementColorTemperature'  # 降低灯光色温
+
+    setBrightnessPercentage = 'setBrightnessPercentage'  # 设置灯光亮度
+
+    incrementBrightnessPercentage = 'incrementBrightnessPercentage'  # 调亮灯光
+
+    decrementBrightnessPercentage = 'decrementBrightnessPercentage'  # 调暗灯光
+
+    setPower = 'setPower'  # 设置功率
+
+    incrementPower = 'incrementPower'  # 增大功率
+
+    decrementPower = 'decrementPower'  # 减小功率
+
+    incrementTemperature = 'incrementTemperature'  # 升高温度
+
+    decrementTemperature = 'decrementTemperature'  # 降低温度
+
+    setTemperature = 'setTemperature'  # 设置温度
+
+    incrementFanSpeed = 'incrementFanSpeed'  # 增加风速
+    decrementFanSpeed = 'decrementFanSpeed'  # 减小风速
+    setFanSpeed = 'setFanSpeed'  # 设置风速
+    setGear = 'setGear'  # 设置档位
+    setMode = 'setMode'  # 设置模式
+    unSetMode = 'unSetMode'  # 取消设置的模式
+    timingSetMode = 'timingSetMode'  # 定时设置模式
+    timingUnsetMode = 'timingUnsetMode'  # 定时取消设置的模式
+    incrementVolume = 'incrementVolume'  # 调高音量
+    decrementVolume = 'decrementVolume'  # 调低音量
+    setVolume = 'setVolume'  # 设置音量
+    setVolumeMute = 'setVolumeMute'  # 设置静音状态
+    decrementTVChannel = 'decrementTVChannel'  # 上一个频道
+    incrementTVChannel = 'incrementTVChannel'  # 下一个频道
+    setTVChannel = 'setTVChannel'  # 设置频道
+    returnTVChannel = 'returnTVChannel'  # 返回上个频道
+    chargeTurnOn = 'chargeTurnOn'  # 开始充电
+    chargeTurnOff = 'chargeTurnOff'  # 停止充电
+    getTurnOnState = 'getTurnOnState'  # 查询开关状态
+    getOilCapacity = 'getOilCapacity'  # 查询油量
+    getElectricityCapacity = 'getElectricityCapacity'  # 查询电量
+    setLockState = 'setLockState'  # 上锁/解锁
+    getLockState = 'getLockState'  # 查询锁状态
+    setSuction = 'setSuction'  # 设置吸力
+    setWaterLevel = 'setWaterLevel'  # 设置水量
+    setCleaningLocation = 'setCleaningLocation'  # 设置清扫位置
+    setComplexActions = 'setComplexActions'  # 执行自定义复杂动作
+    setDirection = 'setDirection'  # 设置移动方向
+    submitPrint = 'submitPrint'  # 打印
+    getAirPM25 = 'getAirPM25'  # 查询PM2.5
+    getAirPM10 = 'getAirPM10'  # 查询PM10
+    getCO2Quantity = 'getCO2Quantity'  # 查询二氧化碳含量
+    getAirQualityIndex = 'getAirQualityIndex'  # 查询空气质量
+    getTemperature = 'getTemperature'  # 查询温度（当前温度和目标温度）
+    getTemperatureReading = 'getTemperatureReading'  # 查询当前温度
+    getTargetTemperature = 'getTargetTemperature'  # 查询目标温度
+    getHumidity = 'getHumidity'  # 查询湿度
+    getTargetHumidity = 'getTargetHumidity'  # 查询目标湿度
+    getWaterQuality = 'getWaterQuality'  # 查询水质
+    getState = 'getState'  # 查询设备所有状态
+    getTimeLeft = 'getTimeLeft'  # 查询剩余时间
+    getRunningStatus = 'getRunningStatus'  # 查询运行状态
+    getRunningTime = 'getRunningTime'  # 查询运行时间
+    getLocation = 'getLocation'  # 查询设备所在位置
+    setTimer = 'setTimer'  # 设备定时
+    timingCancel = 'timingCancel'  # 取消设备定时
+    reset = 'reset'  # 设备复位
+    incrementHeight = 'incrementHeight'  # 升高高度
+    decrementHeight = 'decrementHeight'  # 降低高度
+    setSwingAngle = 'setSwingAngle'  # 设置摆风角度
+    getFanSpeed = 'getFanSpeed'  # 查询风速
+    setHumidity = 'setHumidity'  # 设置湿度模式
+    incrementHumidity = 'incrementHumidity'  # 增大湿度
+    decrementHumidity = 'decrementHumidity'  # 降低湿度
+    incrementMist = 'incrementMist'  # 增大雾量
+    decrementMist = 'decrementMist'  # 见效雾量
+    setMist = 'setMist'  # 设置雾量
+    startUp = 'startUp'  # 设备启动
+    setFloor = 'setFloor'  # 设置电梯楼层
+    decrementFloor = 'decrementFloor'  # 电梯按下
+    incrementFloor = 'incrementFloor'  # 电梯按上
+    incrementSpeed = 'incrementSpeed'  # 增加速度
+    decrementSpeed = 'decrementSpeed'  # 降低速度
+    setSpeed = 'setSpeed'  # 设置速度
+    getSpeed = 'getSpeed'  # 获取速度
+    getMotionInfo = 'getMotionInfo'  # 获取跑步信息
+    turnOnBurner = 'turnOnBurner'  # 打开灶眼
+    turnOffBurner = 'turnOffBurner'  # 关闭灶眼
+    timingTurnOnBurner = 'timingTurnOnBurner'  # 定时打开灶眼
+    timingTurnOffBurner = 'timingTurnOffBurner'  # 定时关闭灶眼
 
 
 class XiaoduDevice():
@@ -18,18 +135,13 @@ class XiaoduDevice():
     def timestampOfSample(self):
         return int(time.time())
 
-    def get_actions_mode(self):
-        ''' 控制模式 '''
-        return ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode']
-
-    def get_actions_light(self):
-        ''' 灯光 '''
-        return ["setBrightnessPercentage", "incrementBrightnessPercentage", "decrementBrightnessPercentage",
-                "incrementColorTemperature", "decrementColorTemperature", "setColorTemperature", "setColor"]
-
-    def get_actions_switch(self):
-        ''' 开关操作 '''
-        return ["turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "getLocation", "setComplexActions"]
+    def get_device(self):
+        ''' 获取设备 '''
+        domain = self.domain
+        if domain == 'switch' or domain == 'input_boolean':
+            return XiaoduSwitch(self.entity_id)
+        elif domain == 'light':
+            return XiaoduLight(self.entity_id)
 
     def device_info(self, device_type, actions, attributes):
         ''' 设备信息 '''
@@ -47,30 +159,204 @@ class XiaoduDevice():
             'attributes': attributes
         }
 
-    def get_attribute_base(self):
+    def TurnOn(self):
+        self.hass.services.call(self.domain, 'turn_on', {
+            'entity_id': self.entity_id
+        })
+
+    def TurnOff(self):
+        self.hass.services.call(self.domain, 'turn_off', {
+            'entity_id': self.entity_id
+        })
+
+    def Pause(self):
+        pass
+
+    def Continue(self):
+        pass
+
+    def StartUp(self):
+        pass
+
+    def SetBrightnessPercentage(self, percentage):
+        self.hass.services.call(self.domain, 'turn_on', {
+            'entity_id': self.entity_id,
+            'brightness_pct': percentage
+        })
+
+    def IncrementBrightnessPercentage(self, percentage):
+        self.hass.services.call(self.domain, 'turn_on', {
+            'entity_id': self.entity_id,
+            'brightness_step_pct': -percentage
+        })
+
+    def DecrementBrightnessPercentage(self, percentage):
+        self.hass.services.call(self.domain, 'turn_on', {
+            'entity_id': self.entity_id,
+            'brightness_step_pct': percentage
+        })
+
+    def SetColor(self):
+        pass
+
+    def IncrementColorTemperature(self):
+        pass
+
+    def DecrementColorTemperature(self):
+        pass
+
+    def SetColorTemperature(self):
+        pass
+
+    def IncrementTemperature(self):
+        pass
+
+    def DecrementTemperature(self):
+        pass
+
+    def SetTemperature(self):
+        pass
+
+    def SetMode(self):
+        pass
+
+    def UnsetMode(self):
+        pass
+
+    def IncrementFanSpeed(self):
+        pass
+
+    def DecrementFanSpeed(self):
+        pass
+
+    def SetFanSpeed(self):
+        pass
+
+    def IncrementVolume(self):
+        pass
+
+    def DecrementVolume(self):
+        pass
+
+    def SetVolume(self):
+        pass
+
+    def SetVolumeMute(self):
+        pass
+
+    def IncrementTVChannel(self):
+        pass
+
+    def DecrementTVChannel(self):
+        pass
+
+    def SetTVChannel(self):
+        pass
+
+    def ReturnTVChannel(self):
+        pass
+
+    def IncrementHeight(self):
+        pass
+
+    def DecrementHeight(self):
+        pass
+
+    def IncrementSpeed(self):
+        pass
+
+    def DecrementSpeed(self):
+        pass
+
+    def SetSpeed(self):
+        pass
+
+    def SetLockState(self):
+        pass
+
+    def SubmitPrint(self):
+        pass
+
+    def SetSuction(self):
+        pass
+
+    def SetWaterLevel(self):
+        pass
+
+    def Charge(self):
+        pass
+
+    def Discharge(self):
+        pass
+
+    def SetDirection(self):
+        pass
+
+    def SetCleaningLocation(self):
+        pass
+
+    def SetComplexActions(self):
+        pass
+
+    def SetTimer(self):
+        pass
+
+    def TimingCancel(self):
+        pass
+
+    def Reset(self):
+        pass
+
+    def SetFloor(self):
+        pass
+
+    def IncrementFloor(self):
+        pass
+
+    def DecrementFloor(self):
+        pass
+
+    def SetHumidity(self):
+        pass
+
+    def GetTemperatureReading(self):
+        pass
+
+    def GetTargetTemperature(self):
+        pass
+
+    def GetHumidity(self):
+        pass
+
+    def GetTargetHumidity(self):
+        pass
+
+    def get_attribute(self, attributes):
         state = self.entity
         if state is None:
             return [
-                self.get_attribute_connectivity(state)
+                self.get_attribute_connectivity()
             ]
+        _list = list(filter(lambda x: x is not None, attributes))
+        _list.extend([
+            self.get_attribute_name(),
+            self.get_attribute_connectivity(),
+            self.get_attribute_location()
+        ])
+        return _list
 
-        return [
-            self.get_attribute_name(state),
-            self.get_attribute_connectivity(state)
-        ]
-
-    def get_attribute_name(self, state):
+    def get_attribute_name(self):
         return {
             "name": "name",
-            "value": state.attributes.get('friendly_name'),
+            "value": self.entity.attributes.get('friendly_name'),
             "scale": "",
             "timestampOfSample": self.timestampOfSample,
             "uncertaintyInMilliseconds": 10,
             "legalValue": "STRING"
         }
 
-    def get_attribute_connectivity(self, state):
-        value = "UNREACHABLE" if state.state == 'unavailable' else "REACHABLE"
+    def get_attribute_connectivity(self):
+        value = "UNREACHABLE" if self.entity.state == 'unavailable' else "REACHABLE"
         return {
             "name": "connectivity",
             "value": value,
@@ -80,8 +366,8 @@ class XiaoduDevice():
             "legalValue": "UNREACHABLE, REACHABLE"
         }
 
-    def get_attribute_brightness(self, state):
-        value = int(state.attributes.get('brightness', 255) / 255 * 100)
+    def get_attribute_brightness(self):
+        value = int(self.entity.attributes.get('brightness', 255) / 255 * 100)
         return {
             "name": "brightness",
             "value": value,
@@ -91,9 +377,9 @@ class XiaoduDevice():
             "legalValue": "[0, 100]"
         }
 
-    def get_attribute_powerState(self, state):
+    def get_attribute_powerState(self):
         ''' 设备通电状态的属性 '''
-        value = "ON" if state.state == 'on' else "OFF"
+        value = "ON" if self.entity.state == 'on' else "OFF"
         return {
             "name": "powerState",
             "value": value,
@@ -250,15 +536,20 @@ class XiaoduDevice():
             "legalValue": "STRING"
         }
 
-    def get_attribute_turnOnState(self, state):
+    def get_attribute_turnOnState(self, default_value=None):
         ''' 设备的开关状态属性。 '''
 
-        if self.domain == 'cover':
-            value = "ON" if state.state == 'open' else "OFF"
-        if self.domain == 'media_player':
-            value = "ON" if ['off', 'idle'].count(state.state) == 0 else "OFF"
+        if default_value is None:
+            state = self.entity
+            if self.domain == 'cover':
+                value = "ON" if state.state == 'open' else "OFF"
+            if self.domain == 'media_player':
+                value = "ON" if ['off', 'idle'].count(
+                    state.state) == 0 else "OFF"
+            else:
+                value = "ON" if state.state == 'on' else "OFF"
         else:
-            value = "ON" if state.state == 'on' else "OFF"
+            value = default_value
 
         return {
             "name": "turnOnState",
@@ -412,11 +703,14 @@ class XiaoduDevice():
             "legalValue": "(LOW, MEDIUM, HIGH)"
         }
 
-    def get_attribute_location(self, state):
+    def get_attribute_location(self):
         ''' 设备的位置属性。 '''
+        value = self.template(f"{{area_name('{self.entity_id}')}}")
+        if not value:
+            value = ""
         return {
             "name": "location",
-            "value": "客厅",
+            "value": value,
             "scale": "",
             "timestampOfSample": self.timestampOfSample,
             "uncertaintyInMilliseconds": 10,
@@ -433,3 +727,296 @@ class XiaoduDevice():
             "uncertaintyInMilliseconds": 10,
             "legalValue": "(STOP, START, PAUSE, WORKING, WORK_NEARLY_FINISHED, DONE)"
         }
+
+    def template(self, message):
+        ''' 模板语法解析 '''
+        tpl = template.Template(message, self.hass)
+        return tpl.async_render(None)
+
+
+class XiaoduCloud():
+
+    def __init__(self, body) -> None:
+        self.hass = async_get_hass()
+        self.header = body['header']
+        self.payload = body['payload']
+
+    def validate(self, accessToken):
+        ''' 授权验证 '''
+        if self.payload['accessToken'] != accessToken:
+            return self.response('InvalidAccessTokenError', self.payload)
+
+    def filter_entity(self, state):
+        ''' 实体过滤 '''
+        if state.state == 'unavailable':
+            return False
+
+        friendly_name = state.attributes.get('friendly_name')
+        if not friendly_name:
+            return False
+        if re.match(r'^[\u4e00-\u9fff]+$', friendly_name) is None:
+            return False
+        # 过滤不支持的实体
+
+        return True
+
+    def discovery(self):
+        ''' 发现设备 '''
+        devices = []
+        states = self.hass.states.async_all()
+        entities = filter(self.filter_entity, states)
+        for entity in entities:
+            xiaodu = XiaoduDevice(entity.entity_id)
+            device = xiaodu.get_device()
+            if not device:
+                continue
+            devices.append(device.device_info())
+
+        return self.response('DiscoverAppliancesResponse', {'discoveredAppliances': devices})
+
+    def control(self):
+        ''' 控制 '''
+        attributes = None
+        name = self.header['name']
+        appliance = self.payload['appliance']
+        additionalApplianceDetails = appliance.get(
+            'additionalApplianceDetails', {})
+        entity_id = appliance['applianceId']
+        state = self.hass.states.get(entity_id)
+        if state is not None:
+
+            xiaodu = XiaoduDevice(entity_id)
+            device = xiaodu.get_device()
+
+            if name == 'TurnOnRequest':
+                attributes = device.TurnOn()
+            elif name == 'TurnOffRequest':
+                attributes = device.TurnOff()
+            elif name == 'TimingTurnOnRequest':
+                pass
+            elif name == 'TimingTurnOffRequest':
+                pass
+            elif name == 'PauseRequest':
+                attributes = device.Pause()
+            elif name == 'ContinueRequest':
+                # 继续
+                attributes = device.Continue()
+            elif name == 'StartUpRequest':
+                # 启动
+                attributes = device.StartUp()
+            # 可控灯光设备
+            elif name == 'SetBrightnessPercentageRequest':
+                attributes = device.SetBrightnessPercentage()
+            elif name == 'IncrementBrightnessPercentageRequest':
+                # 增加亮度
+                attributes = device.IncrementBrightnessPercentage()
+            elif name == 'DecrementBrightnessPercentageRequest':
+                # 减少亮度
+                attributes = device.DecrementBrightnessPercentage()
+            elif name == 'SetColorRequest':
+                pass
+            elif name == 'IncrementColorTemperatureRequest':
+                # 增加色温
+                pass
+            elif name == 'DecrementColorTemperatureRequest':
+                # 减少色温
+                pass
+            elif name == 'SetColorTemperatureRequest':
+                # 设置色温
+                pass
+            # 可控温度设备
+            elif name == 'IncrementTemperatureRequest':
+                pass
+            elif name == 'DecrementTemperatureRequest':
+                pass
+            elif name == 'SetTemperatureRequest':
+                pass
+            # 设备模式设置
+            elif name == 'SetModeRequest':
+                pass
+            elif name == 'UnsetModeRequest':
+                pass
+            elif name == 'TimingSetModeRequest':
+                pass
+            # 可控风速设备
+            elif name == 'IncrementFanSpeedRequest':
+                pass
+            elif name == 'DecrementFanSpeedRequest':
+                pass
+            elif name == 'SetFanSpeedRequest':
+                pass
+            # 可控音量设备
+            elif name == 'IncrementVolumeRequest':
+                pass
+            elif name == 'DecrementVolumeRequest':
+                pass
+            elif name == 'SetVolumeRequest':
+                pass
+            elif name == 'SetVolumeMuteRequest':
+                pass
+            # 电视频道设置
+            elif name == 'IncrementTVChannelRequest':
+                pass
+            elif name == 'DecrementTVChannelRequest':
+                pass
+            elif name == 'SetTVChannelRequest':
+                pass
+            elif name == 'ReturnTVChannelRequest':
+                # 返回上一个观看频道
+                pass
+            # 可控高度设备
+            elif name == 'IncrementHeightRequest':
+                pass
+            elif name == 'DecrementHeightRequest':
+                pass
+            # 可控速度设备
+            elif name == 'IncrementSpeedRequest':
+                pass
+            elif name == 'DecrementSpeedRequest':
+                pass
+            elif name == 'SetSpeedRequest':
+                pass
+            # 可锁定设备
+            elif name == 'SetLockStateRequest':
+                pass
+            # 打印设备
+            elif name == 'SubmitPrintRequest':
+                pass
+            # 可控吸力设备
+            elif name == 'SetSuctionRequest':
+                pass
+            # 可控水量设备
+            elif name == 'SetWaterLevelRequest':
+                pass
+            # 可控电量设备
+            elif name == 'ChargeRequest':
+                pass
+            elif name == 'DischargeRequest':
+                pass
+            # 可控方向设备
+            elif name == 'SetDirectionRequest':
+                pass
+            elif name == 'SetCleaningLocationRequest':
+                pass
+            elif name == 'SetComplexActionsRequest':
+                pass
+            # 可控定时设备
+            elif name == 'SetTimerRequest':
+                pass
+                # 定时
+            elif name == 'TimingCancelRequest':
+                pass
+                # 取消定时
+            # 可复位设备
+            elif name == 'ResetRequset':
+                pass
+            # 可控楼层设备
+            elif name == 'SetFloorRequest':
+                pass
+            elif name == 'IncrementFloorRequest':
+                pass
+            elif name == 'DecrementFloorRequest':
+                pass
+            # 可控湿度类设备
+            elif name == 'SetHumidityRequest':
+                pass
+
+        if attributes is not None:
+            return self.response(name.replace('Request', 'Confirmation'), {
+                'attributes': attributes
+            })
+
+        return self.response('UnsupportedOperationError', {})
+
+    def query(self):
+        ''' 查询 '''
+        name = self.header['name']
+        appliance = self.payload['appliance']
+        additionalApplianceDetails = appliance.get(
+            'additionalApplianceDetails', {})
+        # 实体ID
+        entity_id = appliance['applianceId']
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return {
+                'attributes': [
+                    {
+                        "name": "connectivity",
+                        "value": "UNREACHABLE",
+                        "scale": "",
+                        "timestampOfSample": self.timestampOfSample,
+                        "uncertaintyInMilliseconds": 10,
+                        "legalValue": "(UNREACHABLE, REACHABLE)"
+                    }
+                ]
+            }
+
+        payload = None
+        xiaodu = XiaoduDevice(entity_id)
+        device = xiaodu.get_device()
+
+        if name == 'ReportStateRequest':
+            # 上报属性
+            payload = {
+                'attributes': device.get_attribute()
+            }
+        # 查询设备温度
+        elif name == 'GetTemperatureReadingRequest':
+            payload = device.GetTemperatureReading()
+        elif name == 'GetTargetTemperatureRequest':
+            payload = device.GetTargetTemperature()
+        # 查询空气质量
+        elif name == 'GetHumidityRequest':
+            payload = device.GetHumidity()
+        elif name == 'GetTargetHumidityRequest':
+            payload = device.GetTargetHumidity()
+        elif name == 'GetAirQualityIndexRequest':
+            pass
+        elif name == 'GetAirPM25Request':
+            pass
+        elif name == 'GetAirPM10Request':
+            pass
+        elif name == 'GetCO2QuantityRequest':
+            pass
+        # 查询设备运行参数
+        elif name == 'GetRunningTimeRequest':
+            pass
+        elif name == 'GetTimeLeftRequest':
+            pass
+        elif name == 'GetRunningStatusRequest':
+            pass
+        elif name == 'GetStateRequest':
+            pass
+        elif name == 'GetLocationRequest':
+            pass
+        # 查询电量
+        elif name == 'GetElectricityCapacityRequest':
+            pass
+        # 查询水质
+        elif name == 'GetWaterQualityRequest':
+            pass
+        # 查询风速
+        elif name == 'GetFanSpeedRequest':
+            pass
+        # 查询速度
+        elif name == 'GetSpeedRequest':
+            pass
+        # 查询运动信息
+        elif name == 'GetMotionInfoRequest':
+            pass
+        # 查询开关状态
+        elif name == 'GetTurnOnStateRequest':
+            payload = {
+                'attributes': [
+                    device.get_attribute_turnOnState()
+                ]
+            }
+
+        if payload is not None:
+            return self.response(name.replace('Request', 'Response'), payload)
+
+        return self.response('UnsupportedOperationError', {})
+
+    def response(self, name, payload):
+        self.header['name'] = name
+        return {'header': self.header, 'payload': payload}

@@ -1,6 +1,9 @@
 import time
 import re
 import homeassistant.util.color as color_util
+
+
+
 from .utils import get_area_entity, date_now
 
 area_entity = {}
@@ -673,5 +676,3 @@ def call_service(hass, service, data={}):
     return {
         'attributes': get_attributes(state, powerState)
     }
-
-
