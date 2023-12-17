@@ -359,8 +359,11 @@ class XiaoduDeviceBase():
             "legalValue": "UNREACHABLE, REACHABLE"
         }
 
-    def get_attribute_brightness(self):
-        value = int(self.entity.attributes.get('brightness', 255) / 255 * 100)
+    def get_attribute_brightness(self):        
+        brightness = self.entity.attributes.get('brightness')
+        if not brightness:
+            brightness = 0
+        value = int(brightness / 255 * 100)
         return {
             "name": "brightness",
             "value": value,

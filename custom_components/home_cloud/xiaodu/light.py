@@ -7,6 +7,13 @@ class XiaoduLight(XiaoduDeviceBase):
         super().__init__(entity_id)
         self.device_type = 'LIGHT'
 
+    @property
+    def brightness(self):
+        brightness = self.entity.attributes.get('brightness')
+        if not brightness:
+            return 0
+        return brightness
+
     def device_info(self):
         return super().device_info(self.device_type, [
             XiaoduActions.turnOn,
@@ -51,8 +58,7 @@ class XiaoduLight(XiaoduDeviceBase):
         }
 
     def SetBrightnessPercentage(self, percentage):
-        brightness = int(self.entity.attributes.get(
-            'brightness', 255) / 255 * 100)
+        brightness = int(self.brightness / 255 * 100)
         super().SetBrightnessPercentage(percentage)
         return {
             "attributes": self.get_attribute(),
@@ -68,8 +74,7 @@ class XiaoduLight(XiaoduDeviceBase):
 
     def IncrementBrightnessPercentage(self, percentage):
 
-        brightness = int(self.entity.attributes.get(
-            'brightness', 255) / 255 * 100)
+        brightness = int(self.brightness / 255 * 100)
         super().IncrementBrightnessPercentage(percentage)
         return {
             "attributes": self.get_attribute(),
@@ -85,8 +90,7 @@ class XiaoduLight(XiaoduDeviceBase):
 
     def DecrementBrightnessPercentage(self, percentage):
 
-        brightness = int(self.entity.attributes.get(
-            'brightness', 255) / 255 * 100)
+        brightness = int(self.brightness / 255 * 100)
         super().DecrementBrightnessPercentage(percentage)
         return {
             "attributes": self.get_attribute(),
