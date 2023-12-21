@@ -3,6 +3,13 @@ from homeassistant.core import async_get_hass
 from . import XiaoduDeviceBase
 from .switch import XiaoduSwitch
 from .light import XiaoduLight
+# Cover
+from homeassistant.components.cover import CoverDeviceClass
+from .curt_simp import XiaoduCurtSimp
+from .curtain import XiaoduCurtCurtain
+from .clothes_rack import XiaoduClothesRack
+from .window_opener import XiaoduWindowOpener
+
 
 class XiaoduDevice(XiaoduDeviceBase):
 
@@ -16,6 +23,60 @@ class XiaoduDevice(XiaoduDeviceBase):
             return XiaoduSwitch(self.entity_id)
         elif domain == 'light':
             return XiaoduLight(self.entity_id)
+        elif domain == 'cover':
+            device_class = self.device_class
+            if device_class == CoverDeviceClass.CURTAIN:
+                return XiaoduCurtCurtain(self.entity_id)
+            elif '晾衣架' in self.friendly_name:
+                return XiaoduClothesRack(self.entity_id)
+            elif '窗纱' in self.friendly_name or '纱帘' in self.friendly_name:
+                return XiaoduCurtSimp(self.entity_id)
+            return XiaoduWindowOpener(self.entity_id)
+
+
+class XiaoduParams():
+
+    def __init__(self, payload) -> None:
+        # 高度
+        if 'deltValue' in payload:
+            deltValue = payload.get('deltValue')
+            if isinstance(deltValue, dict):
+                deltValue = deltValue['value']
+            self.deltValue = deltValue
+        # 温度
+        if 'deltaValue' in payload:
+            deltaValue = payload.get('deltaValue')
+            if isinstance(deltaValue, dict):
+                deltaValue = deltaValue['value']
+            self.deltaValue = deltaValue
+        # 颜色
+        if 'color' in payload:
+            self.color = payload['color']
+        # 色温
+        if 'colorTemperatureInKelvin' in payload:
+            self.colorTemperatureInKelvin = payload['colorTemperatureInKelvin']
+        # 单位秒
+        if 'timestamp' in payload:
+            self.timestamp = payload['timestamp']
+        # 定时
+        if 'timeInterval' in payload:
+            self.timeInterval = payload['timeInterval']
+        # 亮度
+        if 'brightness' in payload:
+            self.brightness = payload['brightness']['value']
+        # 增量百分比
+        if 'deltaPercentage' in payload:
+            self.deltaPercentage = payload['deltaPercentage']['value']
+        # 模式
+        if 'mode' in payload:
+            self.mode = payload['mode']['value']
+        # 风速
+        if 'fanSpeed' in payload:
+            self.fanSpeed = payload['fanSpeed']['value']
+        # 温度
+        if 'targetTemperature' in payload:
+            self.targetTemperature = payload['targetTemperature']['value']
+
 
 class XiaoduCloud():
 
@@ -67,6 +128,7 @@ class XiaoduCloud():
         entity_id = appliance['applianceId']
         state = self.hass.states.get(entity_id)
         if state is not None:
+            params = XiaoduParams(self.payload)
 
             xiaodu = XiaoduDevice(entity_id)
             device = xiaodu.get_device()
@@ -89,13 +151,15 @@ class XiaoduCloud():
                 attributes = device.StartUp()
             # 可控灯光设备
             elif name == 'SetBrightnessPercentageRequest':
-                attributes = device.SetBrightnessPercentage()
+                attributes = device.SetBrightnessPercentage(params.brightness)
             elif name == 'IncrementBrightnessPercentageRequest':
                 # 增加亮度
-                attributes = device.IncrementBrightnessPercentage()
+                attributes = device.IncrementBrightnessPercentage(
+                    params.deltaPercentage)
             elif name == 'DecrementBrightnessPercentageRequest':
                 # 减少亮度
-                attributes = device.DecrementBrightnessPercentage()
+                attributes = device.DecrementBrightnessPercentage(
+                    params.deltaPercentage)
             elif name == 'SetColorRequest':
                 pass
             elif name == 'IncrementColorTemperatureRequest':
@@ -149,9 +213,9 @@ class XiaoduCloud():
                 pass
             # 可控高度设备
             elif name == 'IncrementHeightRequest':
-                pass
+                device.IncrementHeight(params.deltaPercentage)
             elif name == 'DecrementHeightRequest':
-                pass
+                device.DecrementHeight(params.deltaPercentage)
             # 可控速度设备
             elif name == 'IncrementSpeedRequest':
                 pass

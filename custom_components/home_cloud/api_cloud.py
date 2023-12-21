@@ -3,12 +3,17 @@ import uuid
 import logging
 import json
 import time
+from typing import Dict
 from homeassistant.core import split_entity_id
+from homeassistant.helpers.debounce import Debouncer
 from .storage import Storage
 
 _LOGGER = logging.getLogger(__name__)
 
+DEBOUNCE_TIME = 60
+
 XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
+
 
 async def http_post(url, data, headers={}):
     _LOGGER.debug
@@ -25,6 +30,7 @@ async def http_post(url, data, headers={}):
             _LOGGER.debug('RESULT：%s', json.dumps(result, indent=2))
             return result
 
+
 async def http_post_token(url, data, token):
     return await http_post(url, data, {'Authorization': f'Bearer {token}'})
 
@@ -40,7 +46,8 @@ class ApiCloud():
         # 加载小度设备
         storage = Storage('homecloud.xiaodu_devices')
         self.xiaodu_devices = storage.load([])
-        self.xiaodu_report_time = {} 
+        # 设备上报
+        self.xiaodu_report: Dict[str, XiaoduReport] = {}
         # 设备状态监听
         self.hass = hass
         hass.bus.async_listen("state_changed", self.state_changed)
@@ -52,11 +59,6 @@ class ApiCloud():
         entity_id = data.get('entity_id')
 
         if entity_id in self.xiaodu_devices:
-            # 阻止上报
-            report_time = self.xiaodu_report_time.get(entity_id)
-            if report_time is not None:
-                if int(time.time()) < report_time:
-                    return
 
             if old_state is not None and new_state is not None:
                 domain = split_entity_id(entity_id)[0]
@@ -77,11 +79,12 @@ class ApiCloud():
                     else:
                         attributeName = 'turnOnState'
 
-                # 同步更新
                 if attributeName is not None:
-                    await self.async_xiaodu_sync(entity_id, attributeName)
+                    report = self.get_report(entity_id)
+                    report.change(entity_id, attributeName)
 
     async def async_xiaodu_sync(self, entity_id, attributeName):
+        ''' 同步小度设备 '''
         skill = self.getSkill('xiaodu')
         if skill is not None:
             await http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
@@ -100,15 +103,20 @@ class ApiCloud():
                     }
                 }
             })
-            self.set_report_time(entity_id, 60)
 
     def save_xiaodu_devices(self, xiaodu_devices):
+        ''' 保存小度设备 '''
         self.xiaodu_devices = xiaodu_devices
         storage = Storage('homecloud.xiaodu_devices')
         storage.save(xiaodu_devices)
 
-    def set_report_time(self, entity_id, second = 0):
-        self.xiaodu_report_time[entity_id] = int(time.time()) + second
+    def get_report(self, entity_id):
+        ''' 获取上报对象 '''
+        report = self.xiaodu_report.get(entity_id)
+        if not report:
+            report = XiaoduReport(self)
+            self.xiaodu_report[entity_id] = report
+        return report
 
     def get_url(self, path):
         return f'{self._url}{path}'
@@ -150,3 +158,58 @@ class ApiCloud():
 
     async def sendWecomMsg(self, data):
         return await http_post_token(self.get_url('/wework/send'), data, self._token)
+
+
+class XiaoduReport():
+
+    def __init__(self, api_cloud) -> None:
+        self.api_cloud = api_cloud
+        self.hass = api_cloud.hass
+        self.type = None
+        self._debouncer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=DEBOUNCE_TIME,
+            immediate=False,
+            function=self.push_delay,
+        )
+
+    def control(self):
+        ''' 控制设备 '''
+        self.type = 'control'
+        self.ts = int(time.time())
+
+    def change(self, entity_id, attribute_name):
+        self.entity_id = entity_id
+        self.attribute_name = attribute_name
+        ''' 属性变更 '''
+        ts = int(time.time())
+        # 音箱控制不执行
+        if self.type == 'control':
+            if ts > self.ts + 5:
+                self.type = 'change'
+                self.ts = int(time.time())
+                # 立即执行
+                self.push()
+            return
+
+        # 属性变动时立即执行
+        if self.type == 'change' and ts > self.ts + 60:
+            self.type = 'delay'
+            self.push()
+            return
+
+        # 60秒内再次变动时，延时执行
+        if self.type == 'delay':
+            self.hass.async_create_task(self._debouncer.async_call())
+
+    def push(self):
+        ''' 上报 '''
+        print('上报时间：%s', int(time.time()))
+        '''
+        self.hass.async_create_task(self.api_clouda.async_xiaodu_sync(
+            self.entity_id, self.attribute_name))
+        '''
+
+    async def push_delay(self):
+        print('延时上报时间：%s', int(time.time()))

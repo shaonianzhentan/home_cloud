@@ -7,51 +7,34 @@ import re
 class XiaoduActions():
 
     turnOn = 'turnOn'  # 打开
-
     turnOff = 'turnOff'  # 关闭
-
     timingTurnOn = 'timingTurnOn'  # 定时打开
-
     timingTurnOff = 'timingTurnOff'  # 定时关闭
-
     pause = 'pause'  # 暂停
-
     continue_ = 'continue'  # 继续
-
     setColor = 'setColor'  # 设置颜色
-
     setColorTemperature = 'setColorTemperature'  # 设置灯光色温
-
     incrementColorTemperature = 'incrementColorTemperature'  # 增高灯光色温
-
     decrementColorTemperature = 'decrementColorTemperature'  # 降低灯光色温
-
     setBrightnessPercentage = 'setBrightnessPercentage'  # 设置灯光亮度
-
     incrementBrightnessPercentage = 'incrementBrightnessPercentage'  # 调亮灯光
-
     decrementBrightnessPercentage = 'decrementBrightnessPercentage'  # 调暗灯光
-
     setPower = 'setPower'  # 设置功率
-
     incrementPower = 'incrementPower'  # 增大功率
-
     decrementPower = 'decrementPower'  # 减小功率
-
     incrementTemperature = 'incrementTemperature'  # 升高温度
-
     decrementTemperature = 'decrementTemperature'  # 降低温度
-
     setTemperature = 'setTemperature'  # 设置温度
-
     incrementFanSpeed = 'incrementFanSpeed'  # 增加风速
     decrementFanSpeed = 'decrementFanSpeed'  # 减小风速
     setFanSpeed = 'setFanSpeed'  # 设置风速
     setGear = 'setGear'  # 设置档位
+
     setMode = 'setMode'  # 设置模式
     unSetMode = 'unSetMode'  # 取消设置的模式
     timingSetMode = 'timingSetMode'  # 定时设置模式
     timingUnsetMode = 'timingUnsetMode'  # 定时取消设置的模式
+
     incrementVolume = 'incrementVolume'  # 调高音量
     decrementVolume = 'decrementVolume'  # 调低音量
     setVolume = 'setVolume'  # 设置音量
@@ -60,6 +43,7 @@ class XiaoduActions():
     incrementTVChannel = 'incrementTVChannel'  # 下一个频道
     setTVChannel = 'setTVChannel'  # 设置频道
     returnTVChannel = 'returnTVChannel'  # 返回上个频道
+
     chargeTurnOn = 'chargeTurnOn'  # 开始充电
     chargeTurnOff = 'chargeTurnOff'  # 停止充电
     getTurnOnState = 'getTurnOnState'  # 查询开关状态
@@ -129,6 +113,10 @@ class XiaoduDeviceBase():
         return self.entity.attributes.get('friendly_name')
 
     @property
+    def device_class(self):
+        return self.entity.attributes.get('device_class')
+
+    @property
     def timestampOfSample(self):
         return int(time.time())
 
@@ -153,17 +141,27 @@ class XiaoduDeviceBase():
             self.hass.services.async_call(self.domain, service, data))
 
     def TurnOn(self):
-        self.call('turn_on', {
-            'entity_id': self.entity_id
-        })
+        ''' 打开 '''
+        service = 'turn_on'
+        data = {'entity_id': self.entity_id}
+        if self.domain == 'cover':
+            service = 'open_cover'
+        self.call(service, data)
 
     def TurnOff(self):
-        self.call('turn_off', {
-            'entity_id': self.entity_id
-        })
+        ''' 关闭 '''
+        service = 'turn_off'
+        data = {'entity_id': self.entity_id}
+        if self.domain == 'cover':
+            service = 'close_cover'
+        self.call(service, data)
 
     def Pause(self):
-        pass
+        ''' 暂停 '''
+        if self.domain == 'cover':
+            self.call('stop_cover', {
+                'entity_id': self.entity_id
+            })
 
     def Continue(self):
         pass
@@ -249,11 +247,20 @@ class XiaoduDeviceBase():
     def ReturnTVChannel(self):
         pass
 
-    def IncrementHeight(self):
-        pass
+    def IncrementHeight(self, percentage=None):
+        service_data = {'entity_id': self.entity_id}
+        ''' 升高 '''
+        if self.domain == 'cover':
+            service_data['position'] = percentage
+            self.call('set_cover_position', service_data)
 
-    def DecrementHeight(self):
-        pass
+    def DecrementHeight(self, percentage=None):
+        ''' 降低 '''
+        service_data = {'entity_id': self.entity_id}
+        ''' 升高 '''
+        if self.domain == 'cover':
+            service_data['position'] = percentage
+            self.call('set_cover_position', service_data)
 
     def IncrementSpeed(self):
         pass
@@ -359,7 +366,7 @@ class XiaoduDeviceBase():
             "legalValue": "UNREACHABLE, REACHABLE"
         }
 
-    def get_attribute_brightness(self):        
+    def get_attribute_brightness(self):
         brightness = self.entity.attributes.get('brightness')
         if not brightness:
             brightness = 0
@@ -484,11 +491,11 @@ class XiaoduDeviceBase():
             "legalValue": "DOUBLE"
         }
 
-    def get_attribute_percentage(self, state):
+    def get_attribute_percentage(self):
         ''' 百分比属性，比如把窗帘关一半，百分比属性值是50%。 '''
         return {
             "name": "percentage",
-            "value": 30,
+            "value": self.entity.attributes.get('current_position') or 0,
             "scale": "%",
             "timestampOfSample": self.timestampOfSample,
             "uncertaintyInMilliseconds": 10,

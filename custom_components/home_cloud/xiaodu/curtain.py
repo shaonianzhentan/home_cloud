@@ -1,12 +1,12 @@
 from . import XiaoduDeviceBase, XiaoduActions
 
 
-class XiaoduCurtSimp(XiaoduDeviceBase):
-    ''' 窗纱 '''
+class XiaoduCurtCurtain(XiaoduDeviceBase):
+    ''' 窗帘 '''
 
     def __init__(self, entity_id) -> None:
         super().__init__(entity_id)
-        self.device_type = 'CURT_SIMP'
+        self.device_type = 'CURTAIN'
 
     def device_info(self):
         return super().device_info(self.device_type, [
