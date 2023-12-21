@@ -10,7 +10,7 @@ from .storage import Storage
 
 _LOGGER = logging.getLogger(__name__)
 
-DEBOUNCE_TIME = 60
+DEBOUNCE_TIME = 120
 
 XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
 
@@ -87,7 +87,7 @@ class ApiCloud():
         ''' 同步小度设备 '''
         skill = self.getSkill('xiaodu')
         if skill is not None:
-            await http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
+            return await http_post('https://xiaodu.baidu.com/saiya/smarthome/changereport', {
                 "header": {
                     "namespace": "DuerOS.ConnectedHome.Control",
                     "name": "ChangeReportRequest",
@@ -166,12 +166,13 @@ class XiaoduReport():
         self.api_cloud = api_cloud
         self.hass = api_cloud.hass
         self.type = None
+        self.push_ts = int(time.time())
         self._debouncer = Debouncer(
             hass=self.hass,
             logger=_LOGGER,
             cooldown=DEBOUNCE_TIME,
             immediate=False,
-            function=self.push_delay,
+            function=self.push,
         )
 
     def control(self):
@@ -187,29 +188,17 @@ class XiaoduReport():
         # 音箱控制不执行
         if self.type == 'control':
             if ts > self.ts + 5:
-                self.type = 'change'
-                self.ts = int(time.time())
+                self.type = None
                 # 立即执行
-                self.push()
+                self.hass.async_create_task(self.push())
             return
 
-        # 属性变动时立即执行
-        if self.type == 'change' and ts > self.ts + 60:
-            self.type = 'delay'
-            self.push()
+        # 延迟上报
+        self.hass.async_create_task(self._debouncer.async_call())
+
+    async def push(self):
+        ts = int(time.time())
+        if ts < self.push_ts + 60:
             return
-
-        # 60秒内再次变动时，延时执行
-        if self.type == 'delay':
-            self.hass.async_create_task(self._debouncer.async_call())
-
-    def push(self):
-        ''' 上报 '''
-        print('上报时间：%s', int(time.time()))
-        '''
-        self.hass.async_create_task(self.api_clouda.async_xiaodu_sync(
-            self.entity_id, self.attribute_name))
-        '''
-
-    async def push_delay(self):
-        print('延时上报时间：%s', int(time.time()))
+        self.push_ts = ts
+        await self.api_clouda.async_xiaodu_sync(self.entity_id, self.attribute_name)
