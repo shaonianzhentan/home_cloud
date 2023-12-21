@@ -39,6 +39,7 @@ class XiaoduDevice(XiaoduDeviceBase):
             if device_class == 'tv':
                 return XiaoduTVSet(self.entity_id)
 
+
 class XiaoduParams():
 
     def __init__(self, payload) -> None:
@@ -47,40 +48,95 @@ class XiaoduParams():
             deltValue = payload.get('deltValue')
             if isinstance(deltValue, dict):
                 deltValue = deltValue['value']
-            self.deltValue = deltValue
+            self._deltValue = deltValue
         # 温度
         if 'deltaValue' in payload:
             deltaValue = payload.get('deltaValue')
             if isinstance(deltaValue, dict):
                 deltaValue = deltaValue['value']
-            self.deltaValue = deltaValue
+            self._deltaValue = deltaValue
         # 颜色
         if 'color' in payload:
-            self.color = payload['color']
+            self._color = payload['color']
         # 色温
         if 'colorTemperatureInKelvin' in payload:
-            self.colorTemperatureInKelvin = payload['colorTemperatureInKelvin']
+            self._colorTemperatureInKelvin = payload['colorTemperatureInKelvin']
         # 单位秒
         if 'timestamp' in payload:
-            self.timestamp = payload['timestamp']
+            self._timestamp = payload['timestamp']
         # 定时
         if 'timeInterval' in payload:
-            self.timeInterval = payload['timeInterval']
+            self._timeInterval = payload['timeInterval']
         # 亮度
         if 'brightness' in payload:
-            self.brightness = payload['brightness']['value']
+            self._brightness = payload['brightness']['value']
         # 增量百分比
         if 'deltaPercentage' in payload:
-            self.deltaPercentage = payload['deltaPercentage']['value']
+            self._deltaPercentage = payload['deltaPercentage']['value']
         # 模式
         if 'mode' in payload:
-            self.mode = payload['mode']['value']
+            self._mode = payload['mode']['value']
         # 风速
         if 'fanSpeed' in payload:
-            self.fanSpeed = payload['fanSpeed']['value']
+            self._fanSpeed = payload['fanSpeed']['value']
         # 温度
         if 'targetTemperature' in payload:
-            self.targetTemperature = payload['targetTemperature']['value']
+            self._targetTemperature = payload['targetTemperature']['value']
+
+    @property
+    def deltValue(self):
+        ''' 高度 '''
+        return self._deltValue
+
+    @property
+    def deltaValue(self):
+        ''' 变数 '''
+        return self._deltaValue
+
+    @property
+    def color(self):
+        ''' 颜色 '''
+        return self._color
+
+    @property
+    def colorTemperatureInKelvin(self):
+        ''' 色温 '''
+        return self._colorTemperatureInKelvin
+
+    @property
+    def timestamp(self):
+        ''' 单位秒 '''
+        return self._timestamp
+
+    @property
+    def timeInterval(self):
+        ''' 定时 '''
+        return self._timeInterval
+
+    @property
+    def brightness(self):
+        ''' 亮度 '''
+        return self._brightness
+
+    @property
+    def deltaPercentage(self):
+        ''' 百分比 '''
+        return self._deltaPercentage
+
+    @property
+    def mode(self):
+        ''' 模式 '''
+        return self._mode
+
+    @property
+    def fanSpeed(self):
+        ''' 风速 '''
+        return self._fanSpeed
+
+    @property
+    def targetTemperature(self):
+        ''' 温度 '''
+        return self._targetTemperature
 
 
 class XiaoduCloud():
@@ -168,21 +224,18 @@ class XiaoduCloud():
                 attributes = device.DecrementBrightnessPercentage(
                     params.deltaPercentage)
             elif name == 'SetColorRequest':
-                pass
+                attributes = device.SetColor(params.color)
             elif name == 'IncrementColorTemperatureRequest':
-                # 增加色温
-                pass
+                attributes = device.IncrementColorTemperature()
             elif name == 'DecrementColorTemperatureRequest':
-                # 减少色温
-                pass
+                attributes = device.DecrementColorTemperature()
             elif name == 'SetColorTemperatureRequest':
-                # 设置色温
-                pass
+                attributes = device.SetColorTemperature(params.colorTemperatureInKelvin)
             # 可控温度设备
             elif name == 'IncrementTemperatureRequest':
-                pass
+                attributes = device.IncrementTemperature()
             elif name == 'DecrementTemperatureRequest':
-                pass
+                attributes = device.DecrementTemperature()
             elif name == 'SetTemperatureRequest':
                 pass
             # 设备模式设置
@@ -194,40 +247,39 @@ class XiaoduCloud():
                 pass
             # 可控风速设备
             elif name == 'IncrementFanSpeedRequest':
-                pass
+                attributes = device.IncrementFanSpeed()
             elif name == 'DecrementFanSpeedRequest':
-                pass
+                attributes = device.DecrementFanSpeed()
             elif name == 'SetFanSpeedRequest':
-                pass
+                attributes = device.SetFanSpeed(params.fanSpeed)
             # 可控音量设备
             elif name == 'IncrementVolumeRequest':
-                pass
+                attributes = device.IncrementVolume()
             elif name == 'DecrementVolumeRequest':
-                pass
+                attributes = device.DecrementVolume()
             elif name == 'SetVolumeRequest':
-                pass
+                attributes = device.SetVolume(params.deltaValue)
             elif name == 'SetVolumeMuteRequest':
-                pass
+                attributes = device.SetVolume(params.deltaValue)
             # 电视频道设置
             elif name == 'IncrementTVChannelRequest':
-                pass
+                attributes = device.IncrementTVChannel()
             elif name == 'DecrementTVChannelRequest':
-                pass
+                attributes = device.DecrementTVChannel()
             elif name == 'SetTVChannelRequest':
-                pass
+                attributes = device.SetTVChannel(params.deltaValue)
             elif name == 'ReturnTVChannelRequest':
-                # 返回上一个观看频道
-                pass
+                attributes = device.ReturnTVChannel()
             # 可控高度设备
             elif name == 'IncrementHeightRequest':
-                device.IncrementHeight(params.deltaPercentage)
+                attributes = device.IncrementHeight(params.deltaPercentage)
             elif name == 'DecrementHeightRequest':
-                device.DecrementHeight(params.deltaPercentage)
+                attributes = device.DecrementHeight(params.deltaPercentage)
             # 可控速度设备
             elif name == 'IncrementSpeedRequest':
-                pass
+                attributes = device.IncrementSpeed()
             elif name == 'DecrementSpeedRequest':
-                pass
+                attributes = device.DecrementSpeed()
             elif name == 'SetSpeedRequest':
                 pass
             # 可锁定设备
