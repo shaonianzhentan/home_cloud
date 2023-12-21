@@ -9,6 +9,9 @@ from .curt_simp import XiaoduCurtSimp
 from .curtain import XiaoduCurtCurtain
 from .clothes_rack import XiaoduClothesRack
 from .window_opener import XiaoduWindowOpener
+# Media Player
+from .tv_set import XiaoduTVSet
+
 
 class XiaoduDevice(XiaoduDeviceBase):
 
@@ -31,7 +34,10 @@ class XiaoduDevice(XiaoduDeviceBase):
             elif '窗纱' in self.friendly_name or '纱帘' in self.friendly_name:
                 return XiaoduCurtSimp(self.entity_id)
             return XiaoduWindowOpener(self.entity_id)
-
+        elif domain == 'media_player':
+            device_class = self.device_class
+            if device_class == 'tv':
+                return XiaoduTVSet(self.entity_id)
 
 class XiaoduParams():
 

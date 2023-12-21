@@ -1,6 +1,5 @@
 from . import XiaoduDeviceBase, XiaoduActions
 
-
 class XiaoduClothesRack(XiaoduDeviceBase):
     ''' 晾衣架 '''
 

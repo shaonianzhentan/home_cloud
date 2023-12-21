@@ -25,36 +25,30 @@ class XiaoduLight(XiaoduDeviceBase):
             XiaoduActions.setBrightnessPercentage,
             XiaoduActions.incrementBrightnessPercentage,
             XiaoduActions.decrementBrightnessPercentage,
-            #XiaoduActions.setColorTemperature,
-            #XiaoduActions.setColor,
-            #XiaoduActions.incrementColorTemperature,
-            #XiaoduActions.decrementColorTemperature,
+            # XiaoduActions.setColorTemperature,
+            # XiaoduActions.setColor,
+            # XiaoduActions.incrementColorTemperature,
+            # XiaoduActions.decrementColorTemperature,
         ], self.get_attribute())
 
-    def get_attribute(self):
-        return {
-            "attributes": super().get_attribute([
-                self.get_attribute_turnOnState(),
-                self.get_attribute_brightness(),
-                #self.get_attribute_color(),
-                #self.get_attribute_colorTemperatureInKelvin()
-            ])
-        }
+    def get_attribute(self, default_value=None):
+        return super().get_attribute([
+            self.get_attribute_turnOnState(default_value),
+            self.get_attribute_brightness(),
+            # self.get_attribute_color(),
+            # self.get_attribute_colorTemperatureInKelvin()
+        ])
 
     def TurnOn(self):
         super().TurnOn()
         return {
-            'attributes': super().get_attribute([
-                self.get_attribute_turnOnState('ON')
-            ])
+            'attributes': self.get_attribute('ON')
         }
 
     def TurnOff(self):
         super().TurnOff()
         return {
-            'attributes': super().get_attribute([
-                self.get_attribute_turnOnState('OFF')
-            ])
+            'attributes': self.get_attribute('OFF')
         }
 
     def SetBrightnessPercentage(self, percentage):

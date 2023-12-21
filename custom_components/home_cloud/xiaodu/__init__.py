@@ -1,7 +1,6 @@
 from homeassistant.helpers import template
 from homeassistant.core import async_get_hass, split_entity_id
 import time
-import re
 
 
 class XiaoduActions():
@@ -140,6 +139,12 @@ class XiaoduDeviceBase():
         self.hass.async_create_task(
             self.hass.services.async_call(self.domain, service, data))
 
+    def call_entity(self, service, data={}):
+        ''' 调用当前实体ID '''
+        data.update({'entity_id': self.entity_id})
+        self.hass.async_create_task(
+            self.hass.services.async_call(self.domain, service, data))
+
     def TurnOn(self):
         ''' 打开 '''
         service = 'turn_on'
@@ -232,24 +237,34 @@ class XiaoduDeviceBase():
         pass
 
     def IncrementVolume(self):
-        pass
+        if self.domain == 'media_player':
+            self.call_entity('volume_up')
 
     def DecrementVolume(self):
-        pass
+        if self.domain == 'media_player':
+            self.call_entity('volume_down')
 
-    def SetVolume(self):
-        pass
+    def SetVolume(self, deltaValue):
+        if self.domain == 'media_player':
+            self.call_entity('volume_set', {
+                'volume_level': deltaValue / 100
+            })
 
-    def SetVolumeMute(self):
-        pass
+    def SetVolumeMute(self, deltaValue):
+        if self.domain == 'media_player':
+            self.call_entity('volume_mute', {
+                'is_volume_muted': deltaValue == 'on'
+            })
 
     def IncrementTVChannel(self):
-        pass
+        if self.domain == 'media_player':
+            self.call_entity('media_previous_track')
 
     def DecrementTVChannel(self):
-        pass
+        if self.domain == 'media_player':
+            self.call_entity('media_next_track')
 
-    def SetTVChannel(self):
+    def SetTVChannel(self, deltaValue):
         pass
 
     def ReturnTVChannel(self):
@@ -262,8 +277,8 @@ class XiaoduDeviceBase():
             if percentage is None:
                 self.call('open_cover', service_data)
             else:
-              service_data['position'] = percentage
-              self.call('set_cover_position', service_data)
+                service_data['position'] = percentage
+                self.call('set_cover_position', service_data)
 
     def DecrementHeight(self, percentage=None):
         ''' 降低 '''
