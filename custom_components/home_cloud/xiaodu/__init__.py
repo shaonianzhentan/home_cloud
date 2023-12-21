@@ -148,6 +148,14 @@ class XiaoduDeviceBase():
             service = 'open_cover'
         self.call(service, data)
 
+    def TurnOnPercent(self, deltValue):
+        ''' 打开 '''
+        service_data = {'entity_id': self.entity_id}
+        ''' 升高 '''
+        if self.domain == 'cover':
+            service_data['position'] = deltValue
+            self.call('set_cover_position', service_data)
+
     def TurnOff(self):
         ''' 关闭 '''
         service = 'turn_off'
@@ -251,16 +259,21 @@ class XiaoduDeviceBase():
         service_data = {'entity_id': self.entity_id}
         ''' 升高 '''
         if self.domain == 'cover':
-            service_data['position'] = percentage
-            self.call('set_cover_position', service_data)
+            if percentage is None:
+                self.call('open_cover', service_data)
+            else:
+              service_data['position'] = percentage
+              self.call('set_cover_position', service_data)
 
     def DecrementHeight(self, percentage=None):
         ''' 降低 '''
         service_data = {'entity_id': self.entity_id}
-        ''' 升高 '''
         if self.domain == 'cover':
-            service_data['position'] = percentage
-            self.call('set_cover_position', service_data)
+            if percentage is None:
+                self.call('close_cover', service_data)
+            else:
+                service_data['position'] = percentage
+                self.call('set_cover_position', service_data)
 
     def IncrementSpeed(self):
         pass

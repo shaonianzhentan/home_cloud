@@ -10,7 +10,6 @@ from .curtain import XiaoduCurtCurtain
 from .clothes_rack import XiaoduClothesRack
 from .window_opener import XiaoduWindowOpener
 
-
 class XiaoduDevice(XiaoduDeviceBase):
 
     def __init__(self, entity_id) -> None:
@@ -135,6 +134,8 @@ class XiaoduCloud():
 
             if name == 'TurnOnRequest':
                 attributes = device.TurnOn()
+            elif name == 'TurnOnPercentRequest':
+                attributes = device.TurnOnPercent(params.deltValue)
             elif name == 'TurnOffRequest':
                 attributes = device.TurnOff()
             elif name == 'TimingTurnOnRequest':
