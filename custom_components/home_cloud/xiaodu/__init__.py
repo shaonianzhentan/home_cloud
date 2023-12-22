@@ -1,5 +1,6 @@
 from homeassistant.helpers import template
 from homeassistant.core import async_get_hass, split_entity_id
+import homeassistant.util.color as color_util
 import time
 
 
@@ -201,7 +202,9 @@ class XiaoduDeviceBase():
         })
 
     def SetColor(self, color):
-        pass
+        self.call_entity('light.turn_on', {
+            'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness'])
+        })
 
     def IncrementColorTemperature(self, deltaPercentage):
         ''' 增加色温 '''
@@ -481,7 +484,7 @@ class XiaoduDeviceBase():
             "legalValue": "(ON, OFF)"
         }
 
-    def get_attribute_powerState(self, state):
+    def get_attribute_powerState(self):
         ''' 设备的功率功率属性，比如电磁炉的功率是800w。 '''
         return {
             "name": "powerLevel",
@@ -492,7 +495,7 @@ class XiaoduDeviceBase():
             "legalValue": "INTEGER"
         }
 
-    def get_attribute_temperature(self, state):
+    def get_attribute_temperature(self):
         ''' 设备对应的温度属性，可以指设备本身的温度、周围环境的温度、设备目标温度等等。 '''
         return {
             "name": "temperature",
@@ -503,7 +506,7 @@ class XiaoduDeviceBase():
             "legalValue": "[16, 31]"
         }
 
-    def get_attribute_mode(self, state):
+    def get_attribute_mode(self):
         ''' 设备控制模式属性，比如空气净化器的急速模式HIGHSPEED。 '''
         return {
             "name": "mode",
@@ -514,7 +517,7 @@ class XiaoduDeviceBase():
             "legalValue": "(SLEEP, HOME, OUT, AUTO, MANUAL, MUTE, INTELLIGENT, HIGHSPEED, DUST, HCHO_FREE)"
         }
 
-    def get_attribute_humidity(self, state):
+    def get_attribute_humidity(self):
         ''' 湿度属性，比如传感器显示的当前空气的湿度。 '''
         return {
             "name": "humidity",
@@ -525,7 +528,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0.0, 100.0]"
         }
 
-    def get_attribute_airQuality(self, state):
+    def get_attribute_airQuality(self):
         ''' 空气质量的属性。 '''
         return {
             "name": "airQuality",
@@ -536,7 +539,7 @@ class XiaoduDeviceBase():
             "legalValue": "(优, 良, 差, 轻度污染, 中度污染, 重度污染, 严重污染)"
         }
 
-    def get_attribute_pm25(self, state):
+    def get_attribute_pm25(self):
         ''' 该属性表示空气中PM2.5的含量。 '''
         return {
             "name": "pm2.5",
@@ -547,7 +550,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0.0, 1000.0]"
         }
 
-    def get_attribute_co2(self, state):
+    def get_attribute_co2(self):
         ''' 该属性表示空气中CO2的浓度。 '''
         return {
             "name": "co2",
@@ -558,7 +561,7 @@ class XiaoduDeviceBase():
             "legalValue": "INTEGER"
         }
 
-    def get_attribute_tovc(self, state):
+    def get_attribute_tovc(self):
         ''' 该属性表示空气中总挥发性有机化合物的浓度。 '''
         return {
             "name": "tovc",
@@ -569,7 +572,7 @@ class XiaoduDeviceBase():
             "legalValue": "DOUBLE"
         }
 
-    def get_attribute_formaldehyde(self, state):
+    def get_attribute_formaldehyde(self):
         ''' 该属性表示空气中甲醛的浓度。 '''
         return {
             "name": "formaldehyde",
@@ -591,7 +594,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0, 100]"
         }
 
-    def get_attribute_color(self, state):
+    def get_attribute_color(self):
         ''' 设备的颜色，比如智能彩色灯泡，属性值是一个表示颜色的对象。 '''
         return {
             "name": "color",
@@ -606,7 +609,7 @@ class XiaoduDeviceBase():
             "legalValue": "OBJECT"
         }
 
-    def get_attribute_colorTemperatureInKelvin(self, state):
+    def get_attribute_colorTemperatureInKelvin(self):
         ''' 设备的色温属性，比如可调白光的灯泡。 '''
         color_temp_kelvin = self.entity.attributes.get('color_temp_kelvin')
         if color_temp_kelvin is not None:
@@ -619,7 +622,7 @@ class XiaoduDeviceBase():
                 "legalValue": "[1000, 10000]"
             }
 
-    def get_attribute_dateTime(self, state):
+    def get_attribute_dateTime(self):
         ''' 日期和时间属性，比如电饭煲的定时做饭的时间。 '''
         return {
             "name": "dateTime",
@@ -654,7 +657,7 @@ class XiaoduDeviceBase():
             "legalValue": "(ON, OFF)"
         }
 
-    def get_attribute_pauseState(self, state):
+    def get_attribute_pauseState(self):
         ''' 设备的暂停属性。 '''
         return {
             "name": "pauseState",
@@ -665,7 +668,7 @@ class XiaoduDeviceBase():
             "legalValue": "BOOLEAN"
         }
 
-    def get_attribute_lockState(self, state):
+    def get_attribute_lockState(self):
         ''' 锁的状态属性。 '''
         return {
             "name": "lockState",
@@ -676,7 +679,7 @@ class XiaoduDeviceBase():
             "legalValue": "(LOCKED, UNLOCKED, JAMMED)"
         }
 
-    def get_attribute_electricityCapacity(self, state):
+    def get_attribute_electricityCapacity(self):
         ''' 设备电池的电量属性。 '''
         return {
             "name": "electricityCapacity",
@@ -687,7 +690,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0.0, 100.0]"
         }
 
-    def get_attribute_oilCapacity(self, state):
+    def get_attribute_oilCapacity(self):
         ''' 设备油箱的油量属性。 '''
         return {
             "name": "oilCapacity",
@@ -698,7 +701,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0.0, 100.0]"
         }
 
-    def get_attribute_drivingDistance(self, state):
+    def get_attribute_drivingDistance(self):
         ''' 设备可行驶距离属性，比如车里的油可供车行使50.0公里。 '''
         return {
             "name": "drivingDistance",
@@ -709,7 +712,7 @@ class XiaoduDeviceBase():
             "legalValue": "DOUBLE"
         }
 
-    def get_attribute_fanSpeed(self, state):
+    def get_attribute_fanSpeed(self):
         ''' 设备风速值属性，比如把空调风速是2档。 '''
         return {
             "name": "fanSpeed",
@@ -720,7 +723,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0, 10]"
         }
 
-    def get_attribute_speed(self, state):
+    def get_attribute_speed(self):
         ''' 设备速度值属性，比如跑步机当前速度多少。 '''
         return {
             "name": "speed",
@@ -731,7 +734,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0, 10]"
         }
 
-    def get_attribute_motionInfo(self, state):
+    def get_attribute_motionInfo(self):
         ''' 运动信息属性，比如在跑步机上跑了2公里。 eg: 我跑了多久，我跑了多少步，我跑了多少米/千米 '''
         return {
             "name": "motionInfo",
@@ -742,7 +745,7 @@ class XiaoduDeviceBase():
             "legalValue": ""
         }
 
-    def get_attribute_channel(self, state):
+    def get_attribute_channel(self):
         ''' 电视频道属性，比如电视3频道。 '''
         return {
             "name": "channel",
@@ -753,7 +756,7 @@ class XiaoduDeviceBase():
             "legalValue": "INTEGER"
         }
 
-    def get_attribute_muteState(self, state):
+    def get_attribute_muteState(self):
         ''' 发声设备当前的静音属性 '''
         return {
             "name": "muteState",
@@ -764,7 +767,7 @@ class XiaoduDeviceBase():
             "legalValue": "BOOLEAN"
         }
 
-    def get_attribute_volume(self, state):
+    def get_attribute_volume(self):
         ''' 设备的音量属性。 '''
         return {
             "name": "volume",
@@ -775,7 +778,7 @@ class XiaoduDeviceBase():
             "legalValue": "[0, 100]"
         }
 
-    def get_attribute_suction(self, state):
+    def get_attribute_suction(self):
         ''' 设备的吸力属性。 '''
         return {
             "name": "suction",
@@ -786,7 +789,7 @@ class XiaoduDeviceBase():
             "legalValue": "(STANDARD, STRONG)"
         }
 
-    def get_attribute_waterLevel(self, state):
+    def get_attribute_waterLevel(self):
         ''' 设备的水量属性。 '''
         return {
             "name": "waterLevel",
@@ -811,7 +814,7 @@ class XiaoduDeviceBase():
             "legalValue": "STRING"
         }
 
-    def get_attribute_workState(self, state):
+    def get_attribute_workState(self):
         ''' 设备的工作状态属性。 '''
         return {
             "name": "workState",

@@ -26,7 +26,7 @@ class XiaoduLight(XiaoduDeviceBase):
             XiaoduActions.incrementBrightnessPercentage,
             XiaoduActions.decrementBrightnessPercentage,
             XiaoduActions.setColorTemperature,
-            # XiaoduActions.setColor,
+            XiaoduActions.setColor,
             XiaoduActions.incrementColorTemperature,
             XiaoduActions.decrementColorTemperature,
         ], self.get_attribute())
@@ -96,6 +96,12 @@ class XiaoduLight(XiaoduDeviceBase):
             "brightness": {
                 "value": brightness + percentage
             }
+        }
+    
+    def SetColor(self, color):
+        super().SetColor(color)
+        return {
+            "attributes": self.get_attribute()
         }
 
     def SetColorTemperature(self, colorTemperatureInKelvin):
