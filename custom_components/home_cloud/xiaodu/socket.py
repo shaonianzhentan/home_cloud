@@ -1,6 +1,6 @@
-from . import XiaoduDevice, XiaoduActions
+from . import XiaoduDeviceBase, XiaoduActions
 
-class XiaoduSocket(XiaoduDevice):
+class XiaoduSocket(XiaoduDeviceBase):
     ''' 插座 '''
 
     def __init__(self, entity_id) -> None:

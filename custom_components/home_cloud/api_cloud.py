@@ -178,4 +178,4 @@ class XiaoduReport():
         self.hass.async_create_task(self._debouncer.async_call())
 
     async def push(self):
-        await self.api_clouda.async_xiaodu_sync(self.entity_id, self.attribute_name)
+        await self.api_cloud.async_xiaodu_sync(self.entity_id, self.attribute_name)

@@ -25,10 +25,10 @@ class XiaoduLight(XiaoduDeviceBase):
             XiaoduActions.setBrightnessPercentage,
             XiaoduActions.incrementBrightnessPercentage,
             XiaoduActions.decrementBrightnessPercentage,
-            # XiaoduActions.setColorTemperature,
+            XiaoduActions.setColorTemperature,
             # XiaoduActions.setColor,
-            # XiaoduActions.incrementColorTemperature,
-            # XiaoduActions.decrementColorTemperature,
+            XiaoduActions.incrementColorTemperature,
+            XiaoduActions.decrementColorTemperature,
         ], self.get_attribute())
 
     def get_attribute(self, default_value=None):
@@ -36,7 +36,7 @@ class XiaoduLight(XiaoduDeviceBase):
             self.get_attribute_turnOnState(default_value),
             self.get_attribute_brightness(),
             # self.get_attribute_color(),
-            # self.get_attribute_colorTemperatureInKelvin()
+            self.get_attribute_colorTemperatureInKelvin()
         ])
 
     def TurnOn(self):
@@ -96,4 +96,22 @@ class XiaoduLight(XiaoduDeviceBase):
             "brightness": {
                 "value": brightness + percentage
             }
+        }
+
+    def SetColorTemperature(self, colorTemperatureInKelvin):
+        super().SetColorTemperature(colorTemperatureInKelvin)
+        return {
+            "attributes": self.get_attribute()
+        }
+    
+    def DecrementColorTemperature(self, deltaPercentage):
+        super().DecrementColorTemperature(deltaPercentage)
+        return {
+            "attributes": self.get_attribute()
+        }
+    
+    def IncrementColorTemperature(self, deltaPercentage):
+        super().IncrementColorTemperature(deltaPercentage)
+        return {
+            "attributes": self.get_attribute()
         }

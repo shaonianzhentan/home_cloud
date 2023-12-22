@@ -135,15 +135,17 @@ class XiaoduDeviceBase():
             'attributes': attributes
         }
 
-    def call(self, service, data):
+    def call_service(self, domain, service, data):
         self.hass.async_create_task(
-            self.hass.services.async_call(self.domain, service, data))
+            self.hass.services.async_call(domain, service, data))
+
+    def call(self, service, data):
+        self.call_service(self.domain, service, data)
 
     def call_entity(self, service, data={}):
         ''' 调用当前实体ID '''
         data.update({'entity_id': self.entity_id})
-        self.hass.async_create_task(
-            self.hass.services.async_call(self.domain, service, data))
+        self.call(service, data)
 
     def TurnOn(self):
         ''' 打开 '''
@@ -202,13 +204,40 @@ class XiaoduDeviceBase():
         pass
 
     def IncrementColorTemperature(self, deltaPercentage):
-        pass
+        ''' 增加色温 '''
+        if self.domain == 'light':
+            color_temp_kelvin = self.entity.attributes.get('color_temp_kelvin')
+            min_color_temp_kelvin = self.entity.attributes.get(
+                'min_color_temp_kelvin')
+            max_color_temp_kelvin = self.entity.attributes.get(
+                'max_color_temp_kelvin')
+            if color_temp_kelvin is not None and min_color_temp_kelvin is not None and max_color_temp_kelvin is not None:
+                kelvin = color_temp_kelvin + deltaPercentage * \
+                    (max_color_temp_kelvin - min_color_temp_kelvin) / 100
+                self.call_entity('turn_on', {
+                    'kelvin': kelvin
+                })
 
     def DecrementColorTemperature(self, deltaPercentage):
-        pass
+        ''' 降低色温 '''
+        if self.domain == 'light':
+            color_temp_kelvin = self.entity.attributes.get('color_temp_kelvin')
+            min_color_temp_kelvin = self.entity.attributes.get(
+                'min_color_temp_kelvin')
+            max_color_temp_kelvin = self.entity.attributes.get(
+                'max_color_temp_kelvin')
+            if color_temp_kelvin is not None and min_color_temp_kelvin is not None and max_color_temp_kelvin is not None:
+                kelvin = color_temp_kelvin - deltaPercentage * \
+                    (max_color_temp_kelvin - min_color_temp_kelvin) / 100
+                self.call_entity('turn_on', {
+                    'kelvin': kelvin
+                })
 
     def SetColorTemperature(self, colorTemperatureInKelvin):
-        pass
+        if self.domain == 'light':
+            self.call_entity('turn_on', {
+                'kelvin': colorTemperatureInKelvin
+            })
 
     def IncrementTemperature(self, deltaValue):
         ''' 温度高 '''
@@ -579,14 +608,16 @@ class XiaoduDeviceBase():
 
     def get_attribute_colorTemperatureInKelvin(self, state):
         ''' 设备的色温属性，比如可调白光的灯泡。 '''
-        return {
-            "name": "colorTemperatureInKelvin",
-            "value": 3000,
-            "scale": "K",
-            "timestampOfSample": self.timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "[1000, 10000]"
-        }
+        color_temp_kelvin = self.entity.attributes.get('color_temp_kelvin')
+        if color_temp_kelvin is not None:
+            return {
+                "name": "colorTemperatureInKelvin",
+                "value": color_temp_kelvin,
+                "scale": "K",
+                "timestampOfSample": self.timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "[1000, 10000]"
+            }
 
     def get_attribute_dateTime(self, state):
         ''' 日期和时间属性，比如电饭煲的定时做饭的时间。 '''

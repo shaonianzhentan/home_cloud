@@ -43,7 +43,8 @@ class XiaoduClothesRack(XiaoduDeviceBase):
         ''' 打开照明 '''
         light = self.light
         if light:
-            self.call('turn_on', {'entity_id': light.entity_id})
+            self.call_service('light', 'turn_on', {
+                              'entity_id': light.entity_id})
             return {
                 'attributes': self.get_attribute('ON')
             }
@@ -52,7 +53,8 @@ class XiaoduClothesRack(XiaoduDeviceBase):
         ''' 关闭照明 '''
         light = self.light
         if light:
-            self.call('turn_off', {'entity_id': light.entity_id})
+            self.call_service('light', 'turn_off', {
+                              'entity_id': light.entity_id})
             return {
                 'attributes': self.get_attribute('OFF')
             }

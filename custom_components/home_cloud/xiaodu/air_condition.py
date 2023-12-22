@@ -1,6 +1,6 @@
-from . import XiaoduDevice, XiaoduActions
+from . import XiaoduDeviceBase, XiaoduActions
 
-class XiaoduAirCondition(XiaoduDevice):
+class XiaoduAirCondition(XiaoduDeviceBase):
 
     def __init__(self, entity_id) -> None:
         super().__init__(entity_id)
