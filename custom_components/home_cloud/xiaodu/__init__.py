@@ -148,33 +148,34 @@ class XiaoduDeviceBase():
     def TurnOn(self):
         ''' 打开 '''
         service = 'turn_on'
-        data = {'entity_id': self.entity_id}
         if self.domain == 'cover':
             service = 'open_cover'
-        self.call(service, data)
+        self.call_entity(service)
 
     def TurnOnPercent(self, deltValue):
-        ''' 打开 '''
-        service_data = {'entity_id': self.entity_id}
-        ''' 升高 '''
+        ''' 打开百分比 '''
         if self.domain == 'cover':
-            service_data['position'] = deltValue
-            self.call('set_cover_position', service_data)
+            self.call_entity('set_cover_position', {
+                'position': deltValue
+            })
 
     def TurnOff(self):
         ''' 关闭 '''
         service = 'turn_off'
-        data = {'entity_id': self.entity_id}
         if self.domain == 'cover':
             service = 'close_cover'
-        self.call(service, data)
+        self.call_entity(service)
+
+    def TimingTurnOn(self, timestamp):
+        pass
+
+    def TimingTurnOff(self, timestamp):
+        pass
 
     def Pause(self):
         ''' 暂停 '''
         if self.domain == 'cover':
-            self.call('stop_cover', {
-                'entity_id': self.entity_id
-            })
+            self.call_entity('stop_cover')
 
     def Continue(self):
         pass
@@ -182,65 +183,96 @@ class XiaoduDeviceBase():
     def StartUp(self):
         pass
 
-    def SetBrightnessPercentage(self, percentage):
-        self.call('turn_on', {
-            'entity_id': self.entity_id,
-            'brightness_pct': percentage
+    def SetBrightnessPercentage(self, brightness):
+        self.call_entity('turn_on', {
+            'brightness_pct': brightness
         })
 
-    def IncrementBrightnessPercentage(self, percentage):
-        self.call('turn_on', {
-            'entity_id': self.entity_id,
-            'brightness_step_pct': -percentage
+    def IncrementBrightnessPercentage(self, brightness):
+        self.call_entity('turn_on', {
+            'brightness_step_pct': -brightness
         })
 
-    def DecrementBrightnessPercentage(self, percentage):
-        self.call('turn_on', {
-            'entity_id': self.entity_id,
-            'brightness_step_pct': percentage
+    def DecrementBrightnessPercentage(self, brightness):
+        self.call_entity('turn_on', {
+            'brightness_step_pct': brightness
         })
 
-    def SetColor(self):
+    def SetColor(self, color):
         pass
 
-    def IncrementColorTemperature(self):
+    def IncrementColorTemperature(self, deltaPercentage):
         pass
 
-    def DecrementColorTemperature(self):
+    def DecrementColorTemperature(self, deltaPercentage):
         pass
 
-    def SetColorTemperature(self):
+    def SetColorTemperature(self, colorTemperatureInKelvin):
         pass
 
-    def IncrementTemperature(self):
+    def IncrementTemperature(self, deltaValue):
+        ''' 温度高 '''
+        if self.domain == 'climate':
+            self.call_entity('set_temperature', {
+                             'temperature': self.entity.attributes.get('temperature') + deltaValue})
+
+    def DecrementTemperature(self, deltaValue):
+        ''' 温度低 '''
+        if self.domain == 'climate':
+            self.call_entity('set_temperature', {
+                             'temperature': self.entity.attributes.get('temperature') - deltaValue})
+
+    def SetTemperature(self, targetTemperature):
+        ''' 设置温度 '''
+        if self.domain == 'climate':
+            self.call_entity('set_temperature', {
+                             'temperature': targetTemperature})
+
+    def SetMode(self, mode):
+        # 空调
+        if self.domain == 'climate':
+            '''
+            # 上下摆风
+            if mode == 'UP_DOWN_SWING':
+                self.call_entity('set_swing_mode', {'hvac_mode': mode.lower()})
+            # 左右摆风
+            elif mode == 'LEFT_RIGHT_SWING':
+                self.call_entity('set_swing_mode', {'hvac_mode': mode.lower()})
+            '''
+            if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
+                self.call_entity('set_hvac_mode', {'hvac_mode': mode.lower()})
+        elif self.domain == 'media_player':
+            if mode == 'MUTE':
+                self.call_entity('volume_mute', {'is_volume_muted': True})
+
+    def UnsetMode(self, mode):
+        if self.domain == 'climate':
+            self.call_entity('set_fan_mode', {'hvac_mode': 'auto'})
+        elif self.domain == 'media_player':
+            if mode == 'MUTE':
+                self.call_entity('volume_mute', {'is_volume_muted': False})
+
+    def TimingSetMode(self, timestamp, mode):
         pass
 
-    def DecrementTemperature(self):
+    def IncrementFanSpeed(self, deltaValue):
+        ''' 风速高 '''
+        if self.domain == 'climate':
+            self.call_entity('set_fan_mode', {'fan_mode': 'high'})
+
+    def DecrementFanSpeed(self, deltaValue):
+        ''' 风速低 '''
+        if self.domain == 'climate':
+            self.call_entity('set_fan_mode', {'fan_mode': 'low'})
+
+    def SetFanSpeed(self, fanSpeed):
         pass
 
-    def SetTemperature(self):
-        pass
-
-    def SetMode(self):
-        pass
-
-    def UnsetMode(self):
-        pass
-
-    def IncrementFanSpeed(self):
-        pass
-
-    def DecrementFanSpeed(self):
-        pass
-
-    def SetFanSpeed(self):
-        pass
-
-    def IncrementVolume(self):
+    def IncrementVolume(self, deltaValue):
         if self.domain == 'media_player':
             self.call_entity('volume_up')
 
-    def DecrementVolume(self):
+    def DecrementVolume(self, deltaValue):
         if self.domain == 'media_player':
             self.call_entity('volume_down')
 
@@ -290,13 +322,13 @@ class XiaoduDeviceBase():
                 service_data['position'] = percentage
                 self.call('set_cover_position', service_data)
 
-    def IncrementSpeed(self):
+    def IncrementSpeed(self, deltaValue):
         pass
 
-    def DecrementSpeed(self):
+    def DecrementSpeed(self, deltaValue):
         pass
 
-    def SetSpeed(self):
+    def SetSpeed(self, speed):
         pass
 
     def SetLockState(self):

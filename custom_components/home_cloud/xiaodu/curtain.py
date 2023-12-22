@@ -11,9 +11,7 @@ class XiaoduCurtCurtain(XiaoduDeviceBase):
     def device_info(self):
         return super().device_info(self.device_type, [
             XiaoduActions.turnOn,
-            XiaoduActions.timingTurnOn,
             XiaoduActions.turnOff,
-            XiaoduActions.timingTurnOff,
             XiaoduActions.getTurnOnState,
             XiaoduActions.getLocation,
             XiaoduActions.pause

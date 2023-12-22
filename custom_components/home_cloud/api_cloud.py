@@ -2,7 +2,6 @@ import aiohttp
 import uuid
 import logging
 import json
-import time
 from typing import Dict
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.debounce import Debouncer
@@ -10,10 +9,9 @@ from .storage import Storage
 
 _LOGGER = logging.getLogger(__name__)
 
-DEBOUNCE_TIME = 120
+DEBOUNCE_TIME = 90
 
 XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
-
 
 async def http_post(url, data, headers={}):
     _LOGGER.debug
@@ -165,8 +163,6 @@ class XiaoduReport():
     def __init__(self, api_cloud) -> None:
         self.api_cloud = api_cloud
         self.hass = api_cloud.hass
-        self.type = None
-        self.push_ts = int(time.time())
         self._debouncer = Debouncer(
             hass=self.hass,
             logger=_LOGGER,
@@ -175,30 +171,11 @@ class XiaoduReport():
             function=self.push,
         )
 
-    def control(self):
-        ''' 控制设备 '''
-        self.type = 'control'
-        self.ts = int(time.time())
-
     def change(self, entity_id, attribute_name):
         self.entity_id = entity_id
         self.attribute_name = attribute_name
-        ''' 属性变更 '''
-        ts = int(time.time())
-        # 音箱控制不执行
-        if self.type == 'control':
-            if ts > self.ts + 5:
-                self.type = None
-                # 立即执行
-                self.hass.async_create_task(self.push())
-            return
-
         # 延迟上报
         self.hass.async_create_task(self._debouncer.async_call())
 
     async def push(self):
-        ts = int(time.time())
-        if ts < self.push_ts + 60:
-            return
-        self.push_ts = ts
         await self.api_clouda.async_xiaodu_sync(self.entity_id, self.attribute_name)

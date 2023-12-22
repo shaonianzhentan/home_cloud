@@ -10,9 +10,7 @@ class XiaoduTVSet(XiaoduDeviceBase):
     def device_info(self):
         return super().device_info(self.device_type, [
             XiaoduActions.turnOn,
-            XiaoduActions.timingTurnOn,
             XiaoduActions.turnOff,
-            XiaoduActions.timingTurnOff,
             XiaoduActions.getTurnOnState,
             XiaoduActions.getLocation,
             XiaoduActions.incrementVolume,
@@ -39,23 +37,23 @@ class XiaoduTVSet(XiaoduDeviceBase):
     def TurnOff(self):
         super().TurnOff()
         return {
-            'attributes': self.get_attribute('ON')
+            'attributes': self.get_attribute('OFF')
         }
 
-    def SetVolume(self):
-        super().SetVolume()
+    def SetVolume(self, deltaValue):
+        super().SetVolume(deltaValue)
         return {'attributes': self.get_attribute()}
 
-    def SetVolumeMute(self):
-        super().SetVolumeMute()
+    def SetVolumeMute(self, deltaValue):
+        super().SetVolumeMute(deltaValue)
         return {'attributes': self.get_attribute()}
 
-    def DecrementVolume(self):
-        super().DecrementVolume()
+    def DecrementVolume(self, deltaValue):
+        super().DecrementVolume(deltaValue)
         return {'attributes': self.get_attribute()}
 
-    def IncrementVolume(self):
-        super().IncrementVolume()
+    def IncrementVolume(self, deltaValue):
+        super().IncrementVolume(deltaValue)
         return {'attributes': self.get_attribute()}
 
     def IncrementTVChannel(self):
@@ -66,8 +64,8 @@ class XiaoduTVSet(XiaoduDeviceBase):
         super().DecrementTVChannel()
         return {'attributes': self.get_attribute()}
 
-    def SetTVChannel(self):
-        super().SetTVChannel()
+    def SetTVChannel(self, deltaValue):
+        super().SetTVChannel(deltaValue)
         return {'attributes': self.get_attribute()}
 
     def ReturnTVChannel(self):
