@@ -412,16 +412,83 @@ class XiaoduDeviceBase():
         pass
 
     def GetTemperatureReading(self):
-        pass
+        temperature = self.entity.attributes.get('temperature')
+        if temperature is not None:
+            return {
+                "temperatureReading": {
+                    "value": temperature,
+                    "scale": "CELSIUS"
+                }
+            }
 
     def GetTargetTemperature(self):
-        pass
+        target_temperature = self.entity.attributes.get('target_temperature')
+        if target_temperature is not None:
+            return {
+                "targetTemperature": {
+                    "value": target_temperature,
+                    "scale": "CELSIUS"
+                }
+            }
 
     def GetHumidity(self):
         pass
 
     def GetTargetHumidity(self):
         pass
+    
+    def GetAirQualityIndex(self):
+        pass
+    
+    def GetAirPM25(self):
+        pass
+    
+    def GetAirPM10(self):
+        pass
+    
+    def GetCO2Quantity(self):
+        pass
+    
+    def GetRunningTime(self):
+        pass
+    
+    def GetTimeLeft(self):
+        pass
+    
+    def GetRunningStatus(self):
+        pass
+    
+    def GetState(self):
+        pass
+    
+    def GetElectricityCapacity(self):
+        pass
+    
+    def GetWaterQuality(self):
+        pass
+    
+    def GetFanSpeed(self):
+        pass
+    
+    def GetSpeed(self):
+        pass
+    
+    def GetMotionInfo(self):
+        pass
+
+    def GetTurnOnState(self):
+        return {
+            'attributes': [
+                self.get_attribute_turnOnState()
+            ]
+        }
+
+    def GetLocation(self):
+        return {
+            'attributes': [
+                self.get_attribute_location()
+            ]
+        }
 
     def get_attribute(self, attributes):
         state = self.entity
@@ -497,14 +564,16 @@ class XiaoduDeviceBase():
 
     def get_attribute_temperature(self):
         ''' 设备对应的温度属性，可以指设备本身的温度、周围环境的温度、设备目标温度等等。 '''
-        return {
-            "name": "temperature",
-            "value": 16,
-            "scale": "CELSIUS",
-            "timestampOfSample": self.timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "[16, 31]"
-        }
+        temperature = self.entity.attributes.get("temperature")
+        if temperature is not None:
+            return {
+                "name": "temperature",
+                "value": temperature,
+                "scale": "CELSIUS",
+                "timestampOfSample": self.timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "[16, 31]"
+            }
 
     def get_attribute_mode(self):
         ''' 设备控制模式属性，比如空气净化器的急速模式HIGHSPEED。 '''
@@ -585,14 +654,16 @@ class XiaoduDeviceBase():
 
     def get_attribute_percentage(self):
         ''' 百分比属性，比如把窗帘关一半，百分比属性值是50%。 '''
-        return {
-            "name": "percentage",
-            "value": self.entity.attributes.get('current_position') or 0,
-            "scale": "%",
-            "timestampOfSample": self.timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "[0, 100]"
-        }
+        current_position = self.entity.attributes.get('current_position')
+        if current_position is not None:
+            return {
+                "name": "percentage",
+                "value": current_position,
+                "scale": "%",
+                "timestampOfSample": self.timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "[0, 100]"
+            }
 
     def get_attribute_color(self):
         ''' 设备的颜色，比如智能彩色灯泡，属性值是一个表示颜色的对象。 '''
@@ -640,9 +711,11 @@ class XiaoduDeviceBase():
             state = self.entity
             if self.domain == 'cover':
                 value = "ON" if state.state == 'open' else "OFF"
-            if self.domain == 'media_player':
+            elif self.domain == 'media_player':
                 value = "ON" if ['off', 'idle'].count(
                     state.state) == 0 else "OFF"
+            elif self.domain == 'climate':
+                value = "ON" if state.state != 'off' else "OFF"
             else:
                 value = "ON" if state.state == 'on' else "OFF"
         else:

@@ -406,50 +406,42 @@ class XiaoduCloud():
         elif name == 'GetTargetHumidityRequest':
             payload = device.GetTargetHumidity()
         elif name == 'GetAirQualityIndexRequest':
-            pass
+            payload = device.GetAirQualityIndex()
         elif name == 'GetAirPM25Request':
-            pass
+            payload = device.GetAirPM25()
         elif name == 'GetAirPM10Request':
-            pass
+            payload = device.GetAirPM10()
         elif name == 'GetCO2QuantityRequest':
-            pass
+            payload = device.GetCO2Quantity()
         # 查询设备运行参数
         elif name == 'GetRunningTimeRequest':
-            pass
+            payload = device.GetRunningTime()
         elif name == 'GetTimeLeftRequest':
-            pass
+            payload = device.GetTimeLeft()
         elif name == 'GetRunningStatusRequest':
-            pass
+            payload = device.GetRunningStatus()
         elif name == 'GetStateRequest':
-            pass
+            payload = device.GetState()
         elif name == 'GetLocationRequest':
-            payload = {
-                'attributes': [
-                    device.get_attribute_location()
-                ]
-            }
+            payload = device.GetLocation()
         # 查询电量
         elif name == 'GetElectricityCapacityRequest':
-            pass
+            payload = device.GetElectricityCapacity()
         # 查询水质
         elif name == 'GetWaterQualityRequest':
-            pass
+            payload = device.GetWaterQuality()
         # 查询风速
         elif name == 'GetFanSpeedRequest':
-            pass
+            payload = device.GetFanSpeed()
         # 查询速度
         elif name == 'GetSpeedRequest':
-            pass
+            payload = device.GetSpeed()
         # 查询运动信息
         elif name == 'GetMotionInfoRequest':
-            pass
+            payload = device.GetMotionInfo()
         # 查询开关状态
         elif name == 'GetTurnOnStateRequest':
-            payload = {
-                'attributes': [
-                    device.get_attribute_turnOnState()
-                ]
-            }
+            payload = device.GetTurnOnState()
 
         if payload is not None:
             return self.response(name.replace('Request', 'Response'), payload)
