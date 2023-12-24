@@ -15,7 +15,6 @@ class XiaoduWindowOpener(XiaoduDeviceBase):
             XiaoduActions.turnOff,
             XiaoduActions.timingTurnOff,
             XiaoduActions.getTurnOnState,
-            XiaoduActions.getLocation,
             XiaoduActions.pause,
             XiaoduActions.incrementHeight,
             XiaoduActions.decrementHeight

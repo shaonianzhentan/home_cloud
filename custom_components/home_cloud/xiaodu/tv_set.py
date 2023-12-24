@@ -12,7 +12,6 @@ class XiaoduTVSet(XiaoduDeviceBase):
             XiaoduActions.turnOn,
             XiaoduActions.turnOff,
             XiaoduActions.getTurnOnState,
-            XiaoduActions.getLocation,
             XiaoduActions.incrementVolume,
             XiaoduActions.decrementVolume,
             XiaoduActions.setVolume,

@@ -21,7 +21,6 @@ class XiaoduLight(XiaoduDeviceBase):
             XiaoduActions.turnOff,
             XiaoduActions.timingTurnOff,
             XiaoduActions.getTurnOnState,
-            XiaoduActions.getLocation,
             XiaoduActions.setBrightnessPercentage,
             XiaoduActions.incrementBrightnessPercentage,
             XiaoduActions.decrementBrightnessPercentage,

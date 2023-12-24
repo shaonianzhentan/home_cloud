@@ -13,7 +13,6 @@ class XiaoduClothesRack(XiaoduDeviceBase):
             XiaoduActions.turnOn,
             XiaoduActions.turnOff,
             XiaoduActions.getTurnOnState,
-            XiaoduActions.getLocation,
             XiaoduActions.pause,
             XiaoduActions.incrementHeight,
             XiaoduActions.decrementHeight

@@ -13,7 +13,6 @@ class XiaoduCurtCurtain(XiaoduDeviceBase):
             XiaoduActions.turnOn,
             XiaoduActions.turnOff,
             XiaoduActions.getTurnOnState,
-            XiaoduActions.getLocation,
             XiaoduActions.pause
         ], self.get_attribute())
 
