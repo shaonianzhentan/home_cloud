@@ -38,7 +38,7 @@ class XiaoduClothesRack(XiaoduDeviceBase):
             self.get_attribute_percentage()
         ])
 
-    def TurnOn(self):
+    def TurnOn(self, params):
         ''' 打开照明 '''
         light = self.light
         if light:
@@ -48,7 +48,7 @@ class XiaoduClothesRack(XiaoduDeviceBase):
                 'attributes': self.get_attribute('ON')
             }
 
-    def TurnOff(self):
+    def TurnOff(self, params):
         ''' 关闭照明 '''
         light = self.light
         if light:

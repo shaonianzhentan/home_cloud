@@ -27,14 +27,14 @@ class XiaoduAirCondition(XiaoduDeviceBase):
             self.get_attribute_temperature(),
         ])
 
-    def TurnOn(self):
-        super().TurnOn()
+    def TurnOn(self, params):
+        super().TurnOn(params)
         return {
             'attributes': self.get_attribute('ON')
         }
 
-    def TurnOff(self):
-        super().TurnOff()
+    def TurnOff(self, params):
+        super().TurnOff(params)
         return {
             'attributes': self.get_attribute('OFF')
         }
@@ -77,6 +77,12 @@ class XiaoduAirCondition(XiaoduDeviceBase):
 
     def DecrementFanSpeed(self, deltaValue):
         super().DecrementFanSpeed(deltaValue)
+        return {
+            'attributes': self.get_attribute()
+        }
+    
+    def SetFanSpeed(self, params):
+        super().SetFanSpeed(params)
         return {
             'attributes': self.get_attribute()
         }

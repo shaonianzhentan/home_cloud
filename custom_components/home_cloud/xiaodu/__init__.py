@@ -100,6 +100,119 @@ class XiaoduActions():
     timingTurnOffBurner = 'timingTurnOffBurner'  # 定时关闭灶眼
 
 
+class XiaoduParams():
+
+    def __init__(self, payload) -> None:
+        self.payload = payload
+
+        if 'deltValue' in payload:
+            deltValue = payload.get('deltValue')
+            if isinstance(deltValue, dict):
+                deltValue = deltValue['value']
+            self._deltValue = deltValue
+
+        if 'timestamp' in payload:
+            self._timestamp = payload['timestamp']
+
+        if 'timeInterval' in payload:
+            self._timeInterval = payload['timeInterval']
+
+        if 'brightness' in payload:
+            self._brightness = payload['brightness']['value']
+
+        if 'deltaPercentage' in payload:
+            self._deltaPercentage = payload['deltaPercentage']['value']
+
+        if 'mode' in payload:
+            self._mode = payload['mode']['value']
+
+        if 'speed' in payload:
+            self._speed = payload['speed']
+
+        if 'targetTemperature' in payload:
+            self._targetTemperature = payload['targetTemperature']['value']
+
+    _deltValue = None
+
+    @property
+    def deltValue(self):
+        ''' 高度 '''
+        return self._deltValue
+
+    @property
+    def deltaValue(self):
+        ''' 变量 '''
+        deltaValue = self.payload.get('deltaValue')
+        if deltaValue is not None:
+            if isinstance(deltaValue, dict):
+                return deltaValue['value']
+            return deltaValue
+
+    @property
+    def color(self):
+        ''' 颜色 '''
+        return self.payload.get('color')
+
+    @property
+    def colorTemperatureInKelvin(self):
+        ''' 色温 '''
+        return self.payload.get('colorTemperatureInKelvin')
+
+    _timestamp = None
+
+    @property
+    def timestamp(self):
+        ''' 单位秒 '''
+        return self._timestamp
+
+    _timeInterval = None
+
+    @property
+    def timeInterval(self):
+        ''' 定时 '''
+        return self._timeInterval
+
+    _brightness = None
+
+    @property
+    def brightness(self):
+        ''' 亮度 '''
+        return self._brightness
+
+    _deltaPercentage = None
+
+    @property
+    def deltaPercentage(self):
+        ''' 百分比 '''
+        return self._deltaPercentage
+
+    _mode = None
+
+    @property
+    def mode(self):
+        ''' 模式 '''
+        return self._mode
+
+    @property
+    def fanSpeed(self):
+        ''' 风速 '''
+        return self.payload.get('fanSpeed')
+
+    _targetTemperature = None
+
+    @property
+    def targetTemperature(self):
+        ''' 温度 '''
+        return self._targetTemperature
+
+    _speed = None
+
+    @property
+    def speed(self):
+        ''' 速度 '''
+        return self._speed
+
+
 class XiaoduDeviceBase():
 
     def __init__(self, entity_id) -> None:
@@ -148,12 +261,17 @@ class XiaoduDeviceBase():
         data.update({'entity_id': self.entity_id})
         self.call(service, data)
 
-    def TurnOn(self):
+    def TurnOn(self, params: XiaoduParams = None):
         ''' 打开 '''
-        service = 'turn_on'
         if self.domain == 'cover':
-            service = 'open_cover'
-        self.call_entity(service)
+            if params.deltaValue is not None:
+                self.call_entity('set_cover_position', {
+                    'position': params.deltaValue
+                })
+            else:
+                self.call_entity('open_cover')
+        else:
+            self.call_entity('turn_on')
 
     def TurnOnPercent(self, deltValue):
         ''' 打开百分比 '''
@@ -162,12 +280,17 @@ class XiaoduDeviceBase():
                 'position': deltValue
             })
 
-    def TurnOff(self):
+    def TurnOff(self, params: XiaoduParams = None):
         ''' 关闭 '''
-        service = 'turn_off'
         if self.domain == 'cover':
-            service = 'close_cover'
-        self.call_entity(service)
+            if params.deltaValue is not None:
+                self.call_entity('set_cover_position', {
+                    'position': 100 - int(params.deltaValue)
+                })
+            else:
+                self.call_entity('close_cover')
+        else:
+            self.call_entity('turn_off')
 
     def TimingTurnOn(self, timestamp):
         pass
@@ -297,8 +420,18 @@ class XiaoduDeviceBase():
         if self.domain == 'climate':
             self.call_entity('set_fan_mode', {'fan_mode': 'low'})
 
-    def SetFanSpeed(self, fanSpeed):
-        pass
+    def SetFanSpeed(self, payload: XiaoduParams):
+        ''' 设置风速 '''
+        if payload.fanSpeed:
+            scale = payload.fanSpeed.get('scale')
+            fan_mode = payload.fanSpeed.get('value')
+            if scale == '挡':
+                if self.domain == 'climate':
+                    fan_modes = self.entity.attributes.get('fan_modes')
+                    if fan_modes and len(fan_modes) > fan_mode:
+                        fan_mode = fan_modes[fan_mode].lower()
+                        self.call_entity('set_fan_mode', {
+                                         'fan_mode': fan_mode})
 
     def IncrementVolume(self, deltaValue):
         if self.domain == 'media_player':
@@ -436,43 +569,43 @@ class XiaoduDeviceBase():
 
     def GetTargetHumidity(self):
         pass
-    
+
     def GetAirQualityIndex(self):
         pass
-    
+
     def GetAirPM25(self):
         pass
-    
+
     def GetAirPM10(self):
         pass
-    
+
     def GetCO2Quantity(self):
         pass
-    
+
     def GetRunningTime(self):
         pass
-    
+
     def GetTimeLeft(self):
         pass
-    
+
     def GetRunningStatus(self):
         pass
-    
+
     def GetState(self):
         pass
-    
+
     def GetElectricityCapacity(self):
         pass
-    
+
     def GetWaterQuality(self):
         pass
-    
+
     def GetFanSpeed(self):
         pass
-    
+
     def GetSpeed(self):
         pass
-    
+
     def GetMotionInfo(self):
         pass
 
@@ -787,6 +920,7 @@ class XiaoduDeviceBase():
 
     def get_attribute_fanSpeed(self):
         ''' 设备风速值属性，比如把空调风速是2档。 '''
+        
         return {
             "name": "fanSpeed",
             "value": 2,

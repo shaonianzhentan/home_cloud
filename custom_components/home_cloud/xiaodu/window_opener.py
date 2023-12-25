@@ -26,16 +26,16 @@ class XiaoduWindowOpener(XiaoduDeviceBase):
             self.get_attribute_percentage()
         ])
 
-    def TurnOn(self):
-        super().TurnOn()
+    def TurnOn(self, params):
+        super().TurnOn(params)
         return {
             'attributes': super().get_attribute([
                 self.get_attribute_turnOnState('ON')
             ])
         }
 
-    def TurnOff(self):
-        super().TurnOff()
+    def TurnOff(self, params):
+        super().TurnOff(params)
         return {
             'attributes': super().get_attribute([
                 self.get_attribute_turnOnState('OFF')

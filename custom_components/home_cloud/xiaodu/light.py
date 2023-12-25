@@ -38,14 +38,14 @@ class XiaoduLight(XiaoduDeviceBase):
             self.get_attribute_colorTemperatureInKelvin()
         ])
 
-    def TurnOn(self):
-        super().TurnOn()
+    def TurnOn(self, params):
+        super().TurnOn(params)
         return {
             'attributes': self.get_attribute('ON')
         }
 
-    def TurnOff(self):
-        super().TurnOff()
+    def TurnOff(self, params):
+        super().TurnOff(params)
         return {
             'attributes': self.get_attribute('OFF')
         }

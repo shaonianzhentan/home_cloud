@@ -1,6 +1,6 @@
 import re
 from homeassistant.core import async_get_hass
-from . import XiaoduDeviceBase
+from . import XiaoduDeviceBase, XiaoduParams
 from .light import XiaoduLight
 
 # switch
@@ -49,123 +49,6 @@ class XiaoduDevice(XiaoduDeviceBase):
         elif domain == 'climate':
             return XiaoduAirCondition(self.entity_id)
 
-class XiaoduParams():
-
-    def __init__(self, payload) -> None:
-        # 高度
-        if 'deltValue' in payload:
-            deltValue = payload.get('deltValue')
-            if isinstance(deltValue, dict):
-                deltValue = deltValue['value']
-            self._deltValue = deltValue
-            
-        if 'deltaValue' in payload:
-            deltaValue = payload.get('deltaValue')
-            if isinstance(deltaValue, dict):
-                deltaValue = deltaValue['value']
-            self._deltaValue = deltaValue
-        # 颜色
-        if 'color' in payload:
-            self._color = payload['color']
-        # 色温
-        if 'colorTemperatureInKelvin' in payload:
-            self._colorTemperatureInKelvin = payload['colorTemperatureInKelvin']
-        # 单位秒
-        if 'timestamp' in payload:
-            self._timestamp = payload['timestamp']
-        # 定时
-        if 'timeInterval' in payload:
-            self._timeInterval = payload['timeInterval']
-        # 亮度
-        if 'brightness' in payload:
-            self._brightness = payload['brightness']['value']
-        # 增量百分比
-        if 'deltaPercentage' in payload:
-            self._deltaPercentage = payload['deltaPercentage']['value']
-        # 模式
-        if 'mode' in payload:
-            self._mode = payload['mode']['value']
-        # 风速
-        if 'fanSpeed' in payload:
-            self._fanSpeed = payload['fanSpeed']['value']
-        # 风速
-        if 'speed' in payload:
-            self._speed = payload['speed']
-        # 温度
-        if 'targetTemperature' in payload:
-            self._targetTemperature = payload['targetTemperature']['value']
-
-    _deltValue = None
-    @property
-    def deltValue(self):
-        ''' 高度 '''
-        return self._deltValue
-
-    _deltaValue = None
-    @property
-    def deltaValue(self):
-        ''' 变数 '''
-        return self._deltaValue
-
-    _color = None
-    @property
-    def color(self):
-        ''' 颜色 '''
-        return self._color
-
-    _colorTemperatureInKelvin = None
-    @property
-    def colorTemperatureInKelvin(self):
-        ''' 色温 '''
-        return self._colorTemperatureInKelvin
-
-    _timestamp = None
-    @property
-    def timestamp(self):
-        ''' 单位秒 '''
-        return self._timestamp
-
-    _timeInterval = None
-    @property
-    def timeInterval(self):
-        ''' 定时 '''
-        return self._timeInterval
-
-    _brightness = None
-    @property
-    def brightness(self):
-        ''' 亮度 '''
-        return self._brightness
-
-    _deltaPercentage = None
-    @property
-    def deltaPercentage(self):
-        ''' 百分比 '''
-        return self._deltaPercentage
-
-    _mode = None
-    @property
-    def mode(self):
-        ''' 模式 '''
-        return self._mode
-
-    _fanSpeed = None
-    @property
-    def fanSpeed(self):
-        ''' 风速 '''
-        return self._fanSpeed
-
-    _targetTemperature = None
-    @property
-    def targetTemperature(self):
-        ''' 温度 '''
-        return self._targetTemperature
-    
-    _speed = None
-    @property
-    def speed(self):
-        ''' 速度 '''
-        return self._speed
 
 class XiaoduCloud():
 
@@ -223,11 +106,11 @@ class XiaoduCloud():
             device = xiaodu.get_device()
 
             if name == 'TurnOnRequest':
-                attributes = device.TurnOn()
+                attributes = device.TurnOn(params)
             elif name == 'TurnOnPercentRequest':
-                attributes = device.TurnOnPercent(params.deltValue)
+                attributes = device.TurnOnPercent(params.deltaValue)
             elif name == 'TurnOffRequest':
-                attributes = device.TurnOff()
+                attributes = device.TurnOff(params)
             elif name == 'TimingTurnOnRequest':
                 attributes = device.TimingTurnOn(params.timestamp)
             elif name == 'TimingTurnOffRequest':
@@ -280,7 +163,7 @@ class XiaoduCloud():
             elif name == 'DecrementFanSpeedRequest':
                 attributes = device.DecrementFanSpeed(params.deltaValue)
             elif name == 'SetFanSpeedRequest':
-                attributes = device.SetFanSpeed(params.fanSpeed)
+                attributes = device.SetFanSpeed(params)
             # 可控音量设备
             elif name == 'IncrementVolumeRequest':
                 attributes = device.IncrementVolume(params.deltaValue)
