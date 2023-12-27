@@ -14,8 +14,11 @@ from .clothes_rack import XiaoduClothesRack
 from .window_opener import XiaoduWindowOpener
 # Media Player
 from .tv_set import XiaoduTVSet
+from .ott_box import XiaoduOttBox
 
 from .air_condition import XiaoduAirCondition
+from .scene_trigger import XiaoduSceneTrigger
+from .activity_trigger import XiaoduActivityTrigger
 
 
 class XiaoduDevice(XiaoduDeviceBase):
@@ -28,9 +31,9 @@ class XiaoduDevice(XiaoduDeviceBase):
         domain = self.domain
         if domain == 'switch' or domain == 'input_boolean':
             if self.device_class == 'plug':
-              return XiaoduSocket(self.entity_id)
+                return XiaoduSocket(self.entity_id)
             else:
-              return XiaoduSwitch(self.entity_id)
+                return XiaoduSwitch(self.entity_id)
         elif domain == 'light':
             return XiaoduLight(self.entity_id)
         elif domain == 'cover':
@@ -44,11 +47,17 @@ class XiaoduDevice(XiaoduDeviceBase):
             return XiaoduWindowOpener(self.entity_id)
         elif domain == 'media_player':
             device_class = self.device_class
-            if device_class == 'tv':
+            if device_class == 'tv' and '电视' in self.friendly_name:
                 return XiaoduTVSet(self.entity_id)
+            else:
+                return XiaoduOttBox(self.entity_id)
         elif domain == 'climate':
             return XiaoduAirCondition(self.entity_id)
-
+        elif domain == 'scene':
+            return XiaoduSceneTrigger(self.entity_id)
+        elif domain == 'script':
+            if self.friendly_name.endswith('模式'):
+                return XiaoduActivityTrigger(self.entity_id)
 
 class XiaoduCloud():
 
@@ -137,9 +146,11 @@ class XiaoduCloud():
             elif name == 'SetColorRequest':
                 attributes = device.SetColor(params.color)
             elif name == 'IncrementColorTemperatureRequest':
-                attributes = device.IncrementColorTemperature(params.deltaPercentage)
+                attributes = device.IncrementColorTemperature(
+                    params.deltaPercentage)
             elif name == 'DecrementColorTemperatureRequest':
-                attributes = device.DecrementColorTemperature(params.deltaPercentage)
+                attributes = device.DecrementColorTemperature(
+                    params.deltaPercentage)
             elif name == 'SetColorTemperatureRequest':
                 attributes = device.SetColorTemperature(
                     params.colorTemperatureInKelvin)
@@ -156,7 +167,8 @@ class XiaoduCloud():
             elif name == 'UnsetModeRequest':
                 attributes = device.UnsetMode(params.mode)
             elif name == 'TimingSetModeRequest':
-                attributes = device.TimingSetMode(params.timestamp, params.mode)
+                attributes = device.TimingSetMode(
+                    params.timestamp, params.mode)
             # 可控风速设备
             elif name == 'IncrementFanSpeedRequest':
                 attributes = device.IncrementFanSpeed(params.deltaValue)
