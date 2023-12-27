@@ -13,6 +13,7 @@ DEBOUNCE_TIME = 90
 
 XIAODU_REPORT_URL = 'https://xiaodu.baidu.com/saiya/smarthome/changereport'
 
+
 async def http_post(url, data, headers={}):
     _LOGGER.debug
     # print('==================')
@@ -27,10 +28,6 @@ async def http_post(url, data, headers={}):
 
             _LOGGER.debug('RESULT：%s', json.dumps(result, indent=2))
             return result
-
-
-async def http_post_token(url, data, token):
-    return await http_post(url, data, {'Authorization': f'Bearer {token}'})
 
 
 class ApiCloud():
@@ -119,6 +116,13 @@ class ApiCloud():
     def get_url(self, path):
         return f'{self._url}{path}'
 
+    async def http_post(self, url, data):
+        res = await http_post(url, data, {'Authorization': f'Bearer {self._token}'})
+        if res.get('statusCode') == 401:
+            await self.login()
+            return await self.http_post(url, data)
+        return res
+
     async def login(self):
         res = await http_post(self.get_url('/user/login'), {
             'username': self._username,
@@ -133,10 +137,10 @@ class ApiCloud():
             raise ValueError(res['msg'], error_code=401)
 
     async def getUserInfo(self):
-        return await http_post_token(self.get_url('/user'), {}, self._token)
+        return await self.http_post(self.get_url('/user'), {})
 
     async def getUserSkill(self):
-        res = await http_post_token(self.get_url('/user/getUserSkill'), {}, self._token)
+        res = await self.http_post(self.get_url('/user/getUserSkill'), {})
         return res['data']
 
     def getSkill(self, skill_name):
@@ -145,18 +149,17 @@ class ApiCloud():
                 return skill
 
     async def setHassLink(self, hassLink):
-        return await http_post_token(self.get_url('/user/setHassLink'), {
+        return await self.http_post(self.get_url('/user/setHassLink'), {
             'hassLink': hassLink
-        }, self._token)
+        })
 
     async def setPassword(self, password):
-        return await http_post_token(self.get_url('/user/setPassword'), {
+        return await self.http_post(self.get_url('/user/setPassword'), {
             'password': password
-        }, self._token)
+        })
 
     async def sendWecomMsg(self, data):
-        return await http_post_token(self.get_url('/wework/send'), data, self._token)
-
+        return await self.http_post(self.get_url('/wework/send'), data)
 
 class XiaoduReport():
 

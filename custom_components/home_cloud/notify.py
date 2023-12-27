@@ -62,7 +62,7 @@ class HomeCloudNotificationService(BaseNotificationService):
 
         api_cloud = self.hass.data[manifest.domain]
         res = await api_cloud.sendWecomMsg(msg)
-        if res['code'] != 0:
+        if res.get('code') != 0:
             _LOGGER.error(res)
             call_service('persistent_notification.create', {
                 'title': '微信推送服务异常',
