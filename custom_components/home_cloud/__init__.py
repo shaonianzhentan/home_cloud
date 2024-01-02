@@ -30,7 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.http.register_view(HttpServiceWecom)
 
     api_cloud = ApiCloud(hass, entry.data)
-    hass.data.setdefault(manifest.domain, api_cloud)
+    hass.data.setdefault(manifest.domain, {})
+    hass.data[manifest.domain] = api_cloud
     hass.async_create_task(api_cloud.login())
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
