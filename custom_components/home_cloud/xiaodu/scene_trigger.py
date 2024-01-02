@@ -7,6 +7,9 @@ class XiaoduSceneTrigger(XiaoduDeviceBase):
         super().__init__(entity_id)
         self.device_type = 'SCENE_TRIGGER'
 
+    def get_attribute(self):
+        return super().get_attribute([])
+
     def device_info(self):
         return super().device_info(self.device_type, [
             XiaoduActions.turnOn
