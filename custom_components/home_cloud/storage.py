@@ -1,6 +1,7 @@
 import os
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
+from homeassistant.helpers.json import save_json
 
 class Storage():
 
